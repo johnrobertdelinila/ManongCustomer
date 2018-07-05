@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<transitionSet xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:duration="350"
+    android:transitionOrdering="together">
+
+    <changeBounds
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        tools:targetApi="lollipop" />
+    <transition
+        class="com.example.johnrobert.manongcustomer.LiftOff"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        app:finalElevation="0dp"
+        app:initialElevation="@dimen/touch_raise"
+        tools:targetApi="lollipop" />
+</transitionSet>

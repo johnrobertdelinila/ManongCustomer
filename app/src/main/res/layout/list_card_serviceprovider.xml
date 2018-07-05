@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginBottom="@dimen/padding_normal_16dp"
+    app:contentPadding="4dp"
+    app:cardElevation="0dp"
+    app:cardMaxElevation="0dp"
+    app:cardCornerRadius="0dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <RelativeLayout
+                android:layout_margin="4dp"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:layout_margin="3dp"
+                    android:visibility="gone"
+                    android:id="@+id/service_profile_picture"
+                    android:layout_centerVertical="true"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:adjustViewBounds="false"
+                    android:cropToPadding="true"
+                    android:scaleType="centerCrop"
+                    android:src="@mipmap/ic_account_circle_black_36dp"
+                    app:civ_border_width="0dp" />
+
+                <android.support.v7.widget.CardView
+                    android:layout_margin="3dp"
+                    android:id="@+id/temp_image_view"
+                    android:layout_centerVertical="true"
+                    app:cardCornerRadius="30dp"
+                    app:cardElevation="0dp"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp">
+
+                    <com.elyeproj.loaderviewlibrary.LoaderImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                </android.support.v7.widget.CardView>
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_margin="4dp"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.elyeproj.loaderviewlibrary.LoaderTextView
+                    android:id="@+id/service_provider_name"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/rubik"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                    app:height_weight="0.8"
+                    android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <!--<TextView-->
+                    <!--android:text="Stars"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content" />-->
+
+                <me.zhanghai.android.materialratingbar.MaterialRatingBar
+                    android:id="@+id/service_provider_ratingbar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="-3dp"
+                    android:layout_marginRight="-3dp"
+                    android:rating="2.5"
+                    app:mrb_progressTint="@color/colorPrimaryDark"
+                    app:mrb_secondaryProgressTint="@color/colorAccent"
+                    android:focusable="false"
+                    style="@style/Widget.MaterialRatingBar.RatingBar.Small" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:layout_marginEnd="10dp"
+                        app:srcCompat="@drawable/ic_date_range_black_24dp"
+                        android:layout_width="15dp"
+                        android:layout_height="15dp" />
+
+                    <com.elyeproj.loaderviewlibrary.LoaderTextView
+                        android:id="@+id/quote_date"
+                        app:height_weight="0.8"
+                        android:fontFamily="@font/rubik"
+                        android:textSize="14sp"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <com.elyeproj.loaderviewlibrary.LoaderTextView
+                        android:id="@+id/quote_price"
+                        app:height_weight="0.8"
+                        android:fontFamily="@font/rubik_medium"
+                        android:textSize="14sp"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <com.elyeproj.loaderviewlibrary.LoaderTextView
+                    android:id="@+id/text_lump_sum"
+                    android:fontFamily="@font/rubik"
+                    android:textSize="14sp"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</android.support.design.card.MaterialCardView>

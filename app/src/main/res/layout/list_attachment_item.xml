@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:weightSum="3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.example.johnrobert.manongcustomer.SquareImageViewForService
+            android:id="@+id/imageView1"
+            android:layout_margin="5dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+
+        <com.example.johnrobert.manongcustomer.SquareImageViewForService
+            android:id="@+id/imageView2"
+            android:layout_margin="5dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+
+        <com.example.johnrobert.manongcustomer.SquareImageViewForService
+            android:id="@+id/imageView3"
+            android:layout_margin="5dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+    <android.support.design.button.MaterialButton
+        android:id="@+id/btn_attachment"
+        android:layout_marginTop="@dimen/padding_normal_16dp"
+        android:layout_gravity="center_horizontal"
+        android:tint="@android:color/white"
+        style="@style/Widget.Manong.Button.Checklist"
+        android:text="Add Attachments"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

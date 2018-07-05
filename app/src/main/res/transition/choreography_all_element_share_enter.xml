@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<transitionSet xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:transitionOrdering="together"
+    tools:targetApi="lollipop">
+    <changeBounds />
+
+    <!-- for activity transition -->
+    <!-- less than 150 -->
+
+    <transition
+        class="com.example.johnrobert.manongcustomer.FadeInTransition"
+        android:duration="150"
+        android:interpolator="@android:interpolator/linear_out_slow_in"
+        android:startDelay="75">
+        <targets>
+            <target android:targetId="@id/all_element_share_no_share_text" />
+        </targets>
+    </transition>
+
+    <!-- for normal transition -->
+    <fade
+        android:duration="150"
+        android:fadingMode="fade_in"
+        android:interpolator="@android:interpolator/linear_out_slow_in"
+        android:startDelay="75">
+        <targets>
+            <target android:targetId="@id/all_element_share_no_share_text" />
+        </targets>
+    </fade>
+
+    <transition
+        android:duration="225"
+        class="com.example.johnrobert.manongcustomer.LiftOff"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        app:initialElevation="@dimen/touch_raise" />
+</transitionSet>

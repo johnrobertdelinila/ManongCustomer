@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- BASIL COLOR -->
+    <color name="colorPrimary">#E0E0E0</color>
+    <color name="colorPrimaryDark">#37966F</color>
+    <color name="colorAccent">#B9E4C9</color>
+
+    <color name="toolbarIconColor">@color/textColorPrimary</color>
+    <color name="loginPageBackgroundColor">#FFFFFF</color>
+    <color name="serviceGridBackgroundColor">#FAFAFA</color>
+
+    <color name="textColorPrimary">#2C574B</color>
+    <color name="colorControlActivated">#FD5523</color>
+
+    <color name="compareBackgroundColor">#A4C639</color>
+    <color name="textColorRequest">#4F4F6F</color>
+    <color name="textColorInfo">#039BE5</color>
+    <color name="textErrorColor">#FC9626</color>
+    <color name="background_light">#fafafa</color> <!-- grey 50 -->
+    <color name="scrim">#99323232</color>
+    <color name="black_transparent">#B3B9E4C9</color>
+    <color name="transparent">#00FFFFFF</color>
+</resources>

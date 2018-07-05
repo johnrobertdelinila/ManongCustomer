@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_dynamic_durations"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".ServiceDetailActivity">
+    <!-- tools:showIn="@layout/activity_dynamic_durations" -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_marginTop="30dp"
+            style="@style/Widget.Manong.TextView.Details"
+            android:text="@string/manong_how_this_works"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:layout_marginRight="40dp"
+            android:layout_marginLeft="40dp"
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/Widget.Manong.TextView.Details"
+                android:text="@string/manong_step_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                style="@style/Widget.Manong.TextView.Details"
+                android:text="@string/manong_step_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                style="@style/Widget.Manong.TextView.Details"
+                android:text="@string/manong_step_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                style="@style/Widget.Manong.TextView.Details"
+                android:text="@string/manong_step_5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_marginTop="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:listDivider" />
+
+        <TextView
+            android:text="Where do you need it?"
+            android:layout_marginTop="36dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginBottom="4dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:fontFamily="@font/rubik"
+            android:textSize="23sp"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent" />
+
+        <TextView
+            android:text="Optional"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:fontFamily="@font/rubik"
+            android:textSize="12sp"
+            android:layout_marginRight="24dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginBottom="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <RelativeLayout
+            android:id="@+id/map_container"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="360dp">
+
+            <android.support.design.card.MaterialCardView
+                android:elevation="2dp"
+                android:id="@+id/async_card"
+                android:scaleY="0.5"
+                android:scaleX="0.5"
+                style="@style/Widget.MaterialComponents.CardView"
+                android:layout_centerInParent="true"
+                android:layout_margin="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:targetApi="lollipop">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <fragment
+                        android:id="@+id/map"
+                        android:name="com.google.android.gms.maps.SupportMapFragment"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        tools:context=".ServiceDetailActivity">
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <android.support.design.card.MaterialCardView
+                                android:layout_margin="10dp"
+                                android:layout_alignParentTop="true"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <fragment
+                                    android:id="@+id/place_autocomplete_fragment"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
+                                    />
+
+                            </android.support.design.card.MaterialCardView>
+
+                            <com.github.glomadrian.materialanimatedswitch.MaterialAnimatedSwitch
+                                android:id="@+id/switch_location"
+                                android:layout_alignParentBottom="true"
+                                android:layout_alignParentEnd="true"
+                                android:layout_margin="15dp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:base_release_color="@color/colorPrimary"
+                                app:base_press_color="@color/compareBackgroundColor"
+                                app:ball_release_color="@android:color/white"
+                                app:ball_press_color="@android:color/white"
+                                app:icon_release="@drawable/ic_location_off_black_24dp"
+                                app:icon_press="@drawable/ic_location_on_black_24dp"
+                                />
+
+                        </RelativeLayout>
+
+                    </fragment>
+
+                    <ImageView
+                        android:id="@+id/transparent_image"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@color/transparent" />
+
+                </RelativeLayout>
+
+            </android.support.design.card.MaterialCardView>
+
+        </RelativeLayout>
+
+        <com.github.florent37.shapeofview.shapes.CutCornerView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:id="@+id/container_cut_button"
+            android:layout_margin="5dp"
+            app:shape_cutCorner_bottomLeftSize="12dp"
+            app:shape_cutCorner_bottomRightSize="12dp"
+            app:shape_cutCorner_topLeftSize="12dp"
+            app:shape_cutCorner_topRightSize="12dp">
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:targetApi="lollipop">
+
+                <android.support.design.button.MaterialButton
+                    android:id="@+id/btn_toggle_map"
+                    android:elevation="0dp"
+                    style="@style/Widget.Manong.Button.Map"
+                    android:text="Toggle Map"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:targetApi="lollipop" />
+
+            </RelativeLayout>
+
+        </com.github.florent37.shapeofview.shapes.CutCornerView>
+
+        <FrameLayout
+            android:id="@+id/checklist_container"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="176dp"
+            android:layout_marginBottom="@dimen/spacing_normal_8dp"
+            android:layout_marginTop="@dimen/spacing_normal_8dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:text="Fill up the Checklist"
+                    android:layout_marginTop="36dp"
+                    android:layout_marginRight="24dp"
+                    android:layout_marginLeft="24dp"
+                    android:layout_marginBottom="24dp"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                    android:fontFamily="@font/rubik"
+                    android:textSize="23sp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent" />
+
+                <android.support.design.card.MaterialCardView
+                    style="@style/Widget.MaterialComponents.CardView"
+                    android:id="@+id/all_element_share_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="@dimen/spacing_normal_8dp"
+                    android:layout_marginLeft="@dimen/spacing_normal_8dp"
+                    android:layout_marginRight="@dimen/spacing_normal_8dp"
+                    android:layout_marginStart="@dimen/spacing_normal_8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    android:stateListAnimator="@animator/raise"
+                    app:cardElevation="2dp"
+                    app:cardCornerRadius="0dp"
+                    tools:targetApi="lollipop">
+
+                    <include layout="@layout/all_element_share_scene1" />
+                </android.support.design.card.MaterialCardView>
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+</android.support.v4.widget.NestedScrollView>

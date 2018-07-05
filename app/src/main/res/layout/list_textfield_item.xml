@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <studio.carbonylgroup.textfieldboxes.TextFieldBoxes
+        android:id="@+id/text_field_detail"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        app:hasFocus="false"
+        app:labelText="Type here.."
+        >
+
+        <studio.carbonylgroup.textfieldboxes.ExtendedEditText
+            android:id="@+id/edit_text_detail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+
+    </studio.carbonylgroup.textfieldboxes.TextFieldBoxes>
+
+</LinearLayout>

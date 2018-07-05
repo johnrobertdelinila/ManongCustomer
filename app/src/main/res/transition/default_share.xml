@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<transitionSet xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:duration="350"
+    >
+    <changeBounds
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        tools:targetApi="lollipop" />
+    <pathMotion class="com.example.johnrobert.manongcustomer.GravityArcMotion" />
+</transitionSet>
