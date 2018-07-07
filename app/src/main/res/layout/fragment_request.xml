@@ -17,13 +17,14 @@
             android:text="@string/manong_header_request"
             tools:text="Request"
             style="@style/TextAppearance.Title.Fragment"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="26dp"
             android:textColor="?android:attr/textColorPrimary"
             android:layout_marginBottom="11dp"
             android:layout_marginStart="24dp"
             tools:targetApi="lollipop" />
 
         <android.support.v7.widget.RecyclerView
+            android:paddingTop="2dp"
             android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

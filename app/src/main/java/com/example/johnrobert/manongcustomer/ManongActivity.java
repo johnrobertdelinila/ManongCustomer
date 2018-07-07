@@ -146,6 +146,10 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
                     navigateFragment(new MoreFragment());
                     currentFragment = btnText;
                     toolbar.setTitle(btnText);
+                }else if (btnText.equalsIgnoreCase("notification") && !currentFragment.equalsIgnoreCase(btnText)) {
+                    navigateFragment(new NotificationFragment());
+                    currentFragment = btnText;
+                    toolbar.setTitle(btnText);
                 }
 
                 if (btnText.equalsIgnoreCase("request")) {

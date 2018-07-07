@@ -6,21 +6,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
@@ -33,10 +29,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 
 /**
@@ -73,8 +65,8 @@ public class RequestFragment extends Fragment {
         progressBar = view.findViewById(R.id.progress_bar);
         recyclerView = view.findViewById(R.id.recycler_view);
         LinearLayoutManager mLinearManager = new LinearLayoutManager(activity);
-        mLinearManager.setReverseLayout(true);
-        mLinearManager.setStackFromEnd(true);
+//        mLinearManager.setReverseLayout(true);
+//        mLinearManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(mLinearManager);
         textNoData = view.findViewById(R.id.text_no_data);
 
@@ -92,7 +84,6 @@ public class RequestFragment extends Fragment {
                                     setUpFirebaseRecycler(queryUserId);
                                     queryUserId.removeEventListener(this);
                                 }else {
-                                    // TODO: Update UI.
                                     // No request is available.
                                     progressBar.setVisibility(ProgressBar.GONE);
                                     textNoData.setVisibility(TextView.VISIBLE);
@@ -106,7 +97,6 @@ public class RequestFragment extends Fragment {
                         });
                         rootRef.removeEventListener(this);
                     }else {
-                        // TODO: Update UI.
                         // No request is available.
                         progressBar.setVisibility(ProgressBar.GONE);
                         textNoData.setVisibility(TextView.VISIBLE);
@@ -147,6 +137,12 @@ public class RequestFragment extends Fragment {
             public RequestViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
                 View view = LayoutInflater.from(context).inflate(R.layout.list_row_card, viewGroup, false);
                 return new RequestViewHolder(view);
+            }
+
+            @NonNull
+            @Override
+            public Request getItem(int position) {
+                return super.getItem(getItemCount() - 1 - position);
             }
 
             @Override
@@ -216,30 +212,19 @@ public class RequestFragment extends Fragment {
         }
     }
 
-    //    @Override
-//    public void onStart() {
-//        super.onStart();
-//        if (firebaseAdapter != null) {
-//            firebaseAdapter.startListening();
-//        }
-//    }
-//
-//    @Override
-//    public void onStop() {
-//        super.onStop();
-//        if (firebaseAdapter != null) {
-//            firebaseAdapter.stopListening();
-//        }
-//    }
-//
-//    @Override
-//    public void onResume() {
-//        super.onResume();
-//        if (firebaseAdapter != null) {
-//            firebaseAdapter.startListening();
-//        }
-//        if (progressBar != null) {
-//            progressBar.setVisibility(ProgressBar.VISIBLE);
-//        }
-//    }
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (firebaseAdapter != null) {
+            firebaseAdapter.startListening();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (firebaseAdapter != null) {
+            firebaseAdapter.startListening();
+        }
+    }
 }

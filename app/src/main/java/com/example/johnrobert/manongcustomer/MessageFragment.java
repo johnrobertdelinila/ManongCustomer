@@ -236,7 +236,7 @@ public class MessageFragment extends Fragment {
                     String displayName = (String) task.getResult().get("displayName");
                     String photoURL = (String) task.getResult().get("photoURL");
 
-                    if (activity != null) {
+                    if (activity != null && getContext() != null) {
                         if (photoURL != null) {
                             if (photoURL.startsWith("https://graph.facebook.com")) {
                                 photoURL = photoURL.concat("?height=100");

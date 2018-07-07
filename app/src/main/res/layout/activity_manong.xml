@@ -66,6 +66,7 @@
     </RelativeLayout>
 
     <android.support.design.widget.FloatingActionButton
+        android:visibility="gone"
         android:id="@+id/fab_login"
         style="@style/Widget.MaterialComponents.FloatingActionButton"
         android:scaleX="0"

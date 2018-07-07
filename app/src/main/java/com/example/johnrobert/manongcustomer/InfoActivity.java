@@ -4,6 +4,7 @@ import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.design.button.MaterialButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.transition.Slide;
@@ -161,6 +162,7 @@ public class InfoActivity extends AppCompatActivity {
 
             root_container.addView(horizontalScrollView);
             root_container.addView(hiddenText);
+
         }
 
     }

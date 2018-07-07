@@ -33,6 +33,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.florent37.shapeofview.shapes.CutCornerView;
 import com.github.glomadrian.materialanimatedswitch.MaterialAnimatedSwitch;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -221,6 +222,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mapContainer.setVisibility(FrameLayout.VISIBLE);
+        findViewById(R.id.container_cut_button).setVisibility(CutCornerView.VISIBLE);
 
         btnMap.setOnClickListener(new View.OnClickListener() {
             boolean isSmall = true;

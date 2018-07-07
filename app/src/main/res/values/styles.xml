@@ -33,6 +33,7 @@
         <item name="android:titleTextAppearance" tools:targetApi="lollipop">@style/TextAppearance.Manong.Toolbar</item>
         <item name="colorControlNormal">?android:attr/colorAccent</item>
         <item name="android:alertDialogTheme">@style/buttonAlertDialog</item>
+        <item name="android:colorEdgeEffect" tools:targetApi="lollipop">@color/colorAccent</item>
     </style>
     
     <style name="MyAlertDialogTheme" parent="android:Theme.Dialog">

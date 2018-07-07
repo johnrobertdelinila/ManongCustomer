@@ -75,7 +75,6 @@ public class ChildActivity extends AppCompatActivity {
 
         Intent intent = new Intent(ChildActivity.this, InfoActivity.class);
         intent.putExtra("request", request);
-        intent.putExtra("isSlideTransition", true);
 
         findViewById(R.id.text_request_info).setOnClickListener(view -> {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
@@ -114,10 +113,13 @@ public class ChildActivity extends AppCompatActivity {
             rootContainer.addView(cardView);
 
             String quoteId = serviceProviders.get(providerId);
+            Intent intent = new Intent(this, MessageProviderActivity.class);
+
             if (user != null) {
                 String messageLinkKey = user.getUid() + providerId;
-                Intent intent = new Intent(this, MessageProviderActivity.class);
                 intent.putExtra("messageLinkKey", messageLinkKey);
+                intent.putExtra("isSlideTransition", true);
+                intent.putExtra("providerId", providerId);
                 cardView.setOnClickListener(view -> {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                         Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(this).toBundle();
@@ -136,7 +138,7 @@ public class ChildActivity extends AppCompatActivity {
                         date.setText("Service Date: " + quote.getDate());
                         price.setText("₱ " + convertNumber(quote.getQuotePrice().get("minimum")) + " - " + convertNumber(quote.getQuotePrice().get("maximum")));
                         lump_sum.setText("Lump Sum");
-                        setProviderName(providerName, profileImage, providerId, temp_image);
+                        setProviderName(providerName, profileImage, providerId, temp_image, intent);
                     }
                 }
 
@@ -148,7 +150,7 @@ public class ChildActivity extends AppCompatActivity {
         }
     }
 
-    private void setProviderName(TextView providerName, CircleImageView profileImage, String uid, CardView temp_image) {
+    private void setProviderName(TextView providerName, CircleImageView profileImage, String uid, CardView temp_image, Intent intent) {
         getUserRecord(uid)
                 .addOnCompleteListener(task -> {
                     if (!task.isSuccessful()) {
@@ -175,12 +177,14 @@ public class ChildActivity extends AppCompatActivity {
                         if (photoURL.startsWith("https://graph.facebook.com")) {
                             photoURL = photoURL.concat("?height=100");
                         }
-                        Glide.with(ChildActivity.this)
+                        Glide.with(getApplicationContext())
                                 .load(photoURL)
                                 .into(profileImage);
                     }
                     profileImage.setVisibility(CircleImageView.VISIBLE);
                     temp_image.setVisibility(CardView.GONE);
+
+                    intent.putExtra("providerName", displayName);
 
                 });
     }

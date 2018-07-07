@@ -54,15 +54,12 @@ public class ServiceFragment extends Fragment {
         recyclerView = view.findViewById(R.id.implementation_list);
         final GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 2);
         recyclerView.setLayoutManager(gridLayoutManager);
-        adapter = new ImplementationAdapter(getContext(), new ImplementationAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(View fromView, ImplementationItem item) {
-                final Intent intent = new Intent(getContext(), item.getActivityClass());
-                intent.putExtra(ServiceDetailActivity.INTENT_EXTRA_ITEM, item);
-                String sharedElementName = getString(R.string.transition_name_implementation_image);
-                final Bundle options = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, fromView, sharedElementName).toBundle();
-                ActivityCompat.startActivityForResult(activity, intent, REQUEST_ID_DETAIL, options);
-            }
+        adapter = new ImplementationAdapter(getContext(), (fromView, item) -> {
+            final Intent intent = new Intent(getContext(), item.getActivityClass());
+            intent.putExtra(ServiceDetailActivity.INTENT_EXTRA_ITEM, item);
+            String sharedElementName = getString(R.string.transition_name_implementation_image);
+            final Bundle options = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, fromView, sharedElementName).toBundle();
+            ActivityCompat.startActivityForResult(activity, intent, REQUEST_ID_DETAIL, options);
         });
         gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override

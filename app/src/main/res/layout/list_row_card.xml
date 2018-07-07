@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     style="@style/Widget.MaterialComponents.CardView"
-    app:cardElevation="0.7dp"
+    app:cardElevation="1dp"
     app:cardCornerRadius="0dp"
     app:contentPaddingRight="@dimen/padding_dialog_24dp"
     app:contentPaddingLeft="@dimen/padding_dialog_24dp"
@@ -22,7 +22,6 @@
         android:layout_height="match_parent">
 
         <android.support.design.card.MaterialCardView
-            app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
             app:contentPaddingRight="9dp"
             app:contentPaddingLeft="9dp"

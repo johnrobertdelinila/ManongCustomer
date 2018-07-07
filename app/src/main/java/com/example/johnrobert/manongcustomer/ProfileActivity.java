@@ -336,7 +336,7 @@ public class ProfileActivity extends AppCompatActivity {
             }
         }
         if (photoURL != null && !photoURL.trim().equals("") && !photoURL.equals("null")) {
-            Glide.with(this).load(photoURL).into(userPhotoUrl);
+            Glide.with(getApplicationContext()).load(photoURL).into(userPhotoUrl);
         }
 
         userPhotoUrl.setVisibility(CircleImageView.VISIBLE);
@@ -874,7 +874,7 @@ public class ProfileActivity extends AppCompatActivity {
         user.updateProfile(profileUpdates)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Glide.with(ProfileActivity.this).load(offlineImage).into(userPhotoUrl);
+                        Glide.with(getApplicationContext()).load(offlineImage).into(userPhotoUrl);
                         userPhotoUrl.setVisibility(CircleImageView.VISIBLE);
                         findViewById(R.id.temp_image_view).setVisibility(CardView.GONE);
                         Toast.makeText(this, "Profile Photo successfully updated.", Toast.LENGTH_SHORT).show();

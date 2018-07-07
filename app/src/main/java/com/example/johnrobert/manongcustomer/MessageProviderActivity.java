@@ -189,7 +189,6 @@ public class MessageProviderActivity extends AppCompatActivity {
                 }
             }
 
-
         }
 
         mProgressBar = findViewById(R.id.progressBar);
@@ -400,7 +399,7 @@ public class MessageProviderActivity extends AppCompatActivity {
                                 task -> {
                                     if (task.isSuccessful()) {
                                         String downloadUrl = task.getResult().toString();
-                                        Glide.with(holder.messageImageView.getContext())
+                                        Glide.with(getApplicationContext())
                                                 .load(downloadUrl)
                                                 .into(holder.messageImageView);
                                     } else {
@@ -409,7 +408,7 @@ public class MessageProviderActivity extends AppCompatActivity {
                                     }
                                 });
                     } else {
-                        Glide.with(holder.messageImageView.getContext())
+                        Glide.with(getApplicationContext())
                                 .load(message.getImageUrl())
                                 .into(holder.messageImageView);
                     }
@@ -422,7 +421,7 @@ public class MessageProviderActivity extends AppCompatActivity {
                     holder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(MessageProviderActivity.this,
                             R.mipmap.ic_account_circle_black_36dp));
                 } else {
-                    Glide.with(MessageProviderActivity.this)
+                    Glide.with(getApplicationContext())
                             .load(message.getPhotoUrl())
                             .into(holder.messengerImageView);
                 }
