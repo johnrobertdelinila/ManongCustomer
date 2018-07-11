@@ -101,7 +101,7 @@ public class ChecklistActivity extends AppCompatActivity implements VerticalStep
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
-        progressDialog.setMessage("Please wait..");
+        progressDialog.setMessage(getString(R.string.manong_please_wait));
 
         service = (Service) getIntent().getSerializableExtra("service");
         checklistAdapters = new ArrayList<>();
@@ -351,7 +351,7 @@ public class ChecklistActivity extends AppCompatActivity implements VerticalStep
         Intent intent = new Intent(ChecklistActivity.this, ServiceDetailActivity.class);
         intent.putExtra("iyot", "iyot");
         setResult(RESULT_OK, intent);
-        Toast.makeText(ChecklistActivity.this, "Sucessfully saved in database!!!", Toast.LENGTH_LONG).show();
+        Toast.makeText(ChecklistActivity.this, "Request sent successfully. Please wait for the vendor respond.", Toast.LENGTH_LONG).show();
         onBackPressed();
     }
 
