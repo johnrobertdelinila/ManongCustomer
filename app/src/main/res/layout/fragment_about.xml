@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:background="@color/serviceGridBackgroundColor">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp"
+        android:layout_height="match_parent"
+        tools:context=".AboutFragment">
+
+        <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/linear_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="12dp"
+            android:paddingLeft="12dp"
+            android:paddingEnd="12dp"
+            android:paddingRight="12dp"
+            android:orientation="vertical">
+
+            <com.github.florent37.shapeofview.shapes.CutCornerView
+                android:layout_gravity="center_horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="15dp"
+                app:shape_cutCorner_bottomLeftSize="12dp"
+                app:shape_cutCorner_bottomRightSize="12dp"
+                app:shape_cutCorner_topLeftSize="12dp"
+                app:shape_cutCorner_topRightSize="12dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:targetApi="lollipop">
+
+                    <android.support.design.button.MaterialButton
+                        android:id="@+id/book_button"
+                        style="@style/Widget.Manong.Button"
+                        android:text="BOOKED"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                </RelativeLayout>
+
+            </com.github.florent37.shapeofview.shapes.CutCornerView>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <RelativeLayout
+        android:layout_marginTop="20dp"
+        android:id="@+id/loading_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_centerInParent="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
+
+</FrameLayout>

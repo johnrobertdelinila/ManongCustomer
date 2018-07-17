@@ -59,7 +59,8 @@ public class MessageFragment extends Fragment {
 
     private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference rootRef = mDatabase.getReference();
-    private DatabaseReference providerRef = rootRef.child("Customers");
+    private DatabaseReference customerRef = rootRef.child("Customers");
+    private DatabaseReference providerRef = rootRef.child("Providers");
     private DatabaseReference messagesRef = rootRef.child("Messages");
     private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
     private FirebaseRecyclerAdapter firebaseAdapter;
@@ -130,15 +131,13 @@ public class MessageFragment extends Fragment {
 
         if (user != null) {
             // Database Reference of all the provider's Customer list.
-            providerRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
+            customerRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.hasChild("service_providers")) {
-                        DatabaseReference customerContactRef = providerRef.child(user.getUid()).child("service_providers");
+                        DatabaseReference customerContactRef = customerRef.child(user.getUid()).child("service_providers");
                         setUpFirebaseRecyclerView(customerContactRef);
                     }else {
-                        // TODO: Update UI.
-                        // No request is available.
                         progressBar.setVisibility(ProgressBar.GONE);
                         textNoData.setVisibility(TextView.VISIBLE);
                     }
@@ -180,15 +179,26 @@ public class MessageFragment extends Fragment {
             @Override
             protected void onBindViewHolder(@NonNull CustomerViewHolder holder, int position, @NonNull CustomerContact customer) {
                 progressBar.setVisibility(ProgressBar.INVISIBLE);
+                Intent intentProviderProfile = new Intent(activity, ProviderProfileActivity.class);
+
                 Intent intent = new Intent(context, MessageProviderActivity.class);
                 intent.putExtra("messageLinkKey", customer.getMessageLinkKey());
                 intent.putExtra("isSlideTransition", false);
                 intent.putExtra("providerId", customer.getProviderId());
 
-                // TODO: Retrieve the Provider Information
+                getProviderProfile(customer.getProviderId(), intentProviderProfile, intent);
+
+                holder.profile_picture.setOnClickListener(view -> {
+                    intentProviderProfile.putExtra("providerId", customer.getProviderId());
+                    startActivity(intentProviderProfile);
+                });
+                holder.temp_image_view.setOnClickListener(view -> {
+                    intentProviderProfile.putExtra("providerId", customer.getProviderId());
+                    startActivity(intentProviderProfile);
+                });
 
                 checkIfMessageExist(customer.getProviderId(), customer.getMessageLinkKey(), holder.text_last_message, holder.text_last_date, holder.text_provider_name,
-                        holder.profile_picture, holder.temp_image_view, intent);
+                        holder.profile_picture, holder.temp_image_view, intent, intentProviderProfile);
 
                 if (position > animatedRow) {
                     animatedRow = position;
@@ -219,8 +229,24 @@ public class MessageFragment extends Fragment {
         firebaseAdapter.startListening();
     }
 
+    private void getProviderProfile(String providerId, Intent intent, Intent intent2) {
+        providerRef.child(providerId).child("my_profile").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ProviderProfile providerProfile = dataSnapshot.getValue(ProviderProfile.class);
+                intent.putExtra("providerProfile", providerProfile);
+                intent2.putExtra("providerProfile", providerProfile);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     private void setPhotoAndDisplayName(String providerId, CircleImageView profile_picture, TextView text_provider_name,
-                                        CardView temp_image, Intent intent) {
+                                        CardView temp_image, Intent intent, Intent intentProvider) {
         getUserRecord(providerId)
                 .addOnCompleteListener(task -> {
                     if (!task.isSuccessful()) {
@@ -235,13 +261,14 @@ public class MessageFragment extends Fragment {
                     }
                     String displayName = (String) task.getResult().get("displayName");
                     String photoURL = (String) task.getResult().get("photoURL");
+                    String phoneNumber = (String) task.getResult().get("phoneNumber");
 
                     if (activity != null && getContext() != null) {
                         if (photoURL != null) {
                             if (photoURL.startsWith("https://graph.facebook.com")) {
                                 photoURL = photoURL.concat("?height=100");
                             }
-                            Glide.with(activity)
+                            Glide.with(activity.getApplicationContext())
                                     .load(photoURL)
                                     .into(profile_picture);
                         }
@@ -249,25 +276,33 @@ public class MessageFragment extends Fragment {
                         profile_picture.setVisibility(CircleImageView.VISIBLE);
                         if (displayName != null) {
                             text_provider_name.setText(displayName);
-                            intent.putExtra("providerName", displayName);
                         }else {
                             text_provider_name.setText("Anonymous");
                         }
                     }
+
+                    intent.putExtra("providerName", displayName);
+                    intent.putExtra("providerPhoneNumber", phoneNumber);
+                    intent.putExtra("providerPhoto", photoURL);
+
+                    intentProvider.putExtra("providerDisplayName", displayName);
+                    intentProvider.putExtra("providerPhotoUrl", photoURL);
+                    intentProvider.putExtra("providerPhoneNumber", phoneNumber);
+
                 });
     }
 
     private void checkIfMessageExist(String getProviderId, String messageLinkKey, TextView text_last_message, TextView text_last_date, TextView text_provider_name,
-                                     CircleImageView profile_picture, CardView temp_image, Intent intent) {
+                                     CircleImageView profile_picture, CardView temp_image, Intent intent, Intent intentProvider) {
         messagesRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.hasChild(messageLinkKey)) {
                     messagesRef.removeEventListener(this);
-                    setPhotoAndDisplayName(getProviderId, profile_picture, text_provider_name, temp_image, intent);
-                    setProviderInformation(getProviderId, temp_image, messageLinkKey, text_last_message, text_last_date, text_provider_name, profile_picture);
+                    setPhotoAndDisplayName(getProviderId, profile_picture, text_provider_name, temp_image, intent, intentProvider);
+                    setProviderInformation(getProviderId, temp_image, messageLinkKey, text_last_message, text_last_date, text_provider_name, profile_picture, intentProvider);
                 }else {
-                    setPhotoAndDisplayName(getProviderId, profile_picture, text_provider_name, temp_image, intent);
+                    setPhotoAndDisplayName(getProviderId, profile_picture, text_provider_name, temp_image, intent, intentProvider);
                 }
             }
 
@@ -278,7 +313,8 @@ public class MessageFragment extends Fragment {
         });
     }
 
-    private void setProviderInformation(String providerId, CardView temp_image, String messageLinkKey, TextView text_last_message, TextView text_last_date, TextView text_provider_name, CircleImageView profile_picture) {
+    private void setProviderInformation(String providerId, CardView temp_image, String messageLinkKey, TextView text_last_message, TextView text_last_date,
+                                        TextView text_provider_name, CircleImageView profile_picture, Intent intentProvider) {
         messagesRef.child(messageLinkKey).limitToLast(1).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -293,6 +329,7 @@ public class MessageFragment extends Fragment {
                         text_last_date.setText(dateTime);
 
                         if (lastMessage.getUid().equalsIgnoreCase(providerId)) {
+                            intentProvider.putExtra("providerDisplayName", lastMessage.getName());
                             if (lastMessage.getName() != null && !lastMessage.getName().trim().equalsIgnoreCase("")) {
                                 text_provider_name.setText(lastMessage.getName());
                             }
@@ -301,11 +338,12 @@ public class MessageFragment extends Fragment {
                                 if (photoURL.startsWith("https://graph.facebook.com")) {
                                     photoURL = photoURL.concat("?height=100");
                                 }
-                                Glide.with(activity)
+                                Glide.with(activity.getApplicationContext())
                                         .load(photoURL)
                                         .into(profile_picture);
                                 temp_image.setVisibility(CardView.GONE);
                                 profile_picture.setVisibility(CircleImageView.VISIBLE);
+                                intentProvider.putExtra("providerPhotoUrl", photoURL);
                             }
                         }
 

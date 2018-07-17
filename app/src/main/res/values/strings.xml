@@ -79,8 +79,9 @@
     <string name="manong_view_profile">View and edit account</string>
     <string name="manong_text_info">Info</string>
     <string name="manong_header_service">Services For You</string>
-    <string name="manong_button_loading">CHECKING EMAIL...</string>
-    <string name="manong_image_loading">Please wait...</string>
+    <string name="manong_button_loading">CHECKING EMAIL…</string>
+    <string name="manong_image_loading">Please wait…</string>
     <string name="manong_text_compare">Compare</string>
+    <string name="manong_please_wait">Please wait…</string>
 
 </resources>

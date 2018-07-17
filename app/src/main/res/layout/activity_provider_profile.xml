@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".ProviderProfileActivity">
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/appBar"
+        android:background="@color/loginPageBackgroundColor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.design.widget.CollapsingToolbarLayout
+            android:id="@+id/collapsing_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fitsSystemWindows="true"
+            app:contentScrim="@color/colorPrimaryDark"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
+            android:background="@color/colorPrimaryDark"
+            app:titleEnabled="false">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:fitsSystemWindows="true"
+                app:layout_collapseMode="parallax"
+                android:layout_height="wrap_content">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/providerImage"
+                    android:layout_marginTop="48dp"
+                    android:layout_width="@dimen/image_size"
+                    android:layout_height="@dimen/image_size"
+                    android:layout_centerHorizontal="true"
+                    android:src="@drawable/manong_customer_logo"
+                    android:scaleType="centerCrop" />
+
+                <!--app:civ_border_width="2dp"-->
+                <!--app:civ_border_color="@color/loginPageBackgroundColor"-->
+
+                <me.zhanghai.android.materialratingbar.MaterialRatingBar
+                    android:id="@+id/service_provider_ratingbar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="24dp"
+                    android:layout_margin="12dp"
+                    android:rating="2.5"
+                    android:layout_centerHorizontal="true"
+                    android:layout_below="@+id/providerImage"
+                    android:isIndicator="true"
+                    app:mrb_progressTint="@color/textColorPrimary"
+                    app:mrb_secondaryProgressTint="@color/colorAccent"
+                    style="@style/Widget.MaterialRatingBar.RatingBar" />
+
+            </RelativeLayout>
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:paddingStart="12dp"
+                android:paddingLeft="12dp"
+                android:paddingEnd="12dp"
+                android:paddingRight="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                style="@style/Widget.Manong.Toolbar.Profile"
+                app:layout_collapseMode="pin"
+                app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+        </android.support.design.widget.CollapsingToolbarLayout>
+
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:tabIndicatorHeight="3dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:background="@color/loginPageBackgroundColor"
+            app:tabIndicatorAnimationDuration="500"
+            app:tabTextAppearance="@style/TabTextAppearance"
+            app:tabIndicatorColor="@color/colorControlActivated"
+            app:tabRippleColor="@color/colorPrimaryDark"
+            app:tabTextColor="@color/colorAccent"
+            app:tabSelectedTextColor="@color/colorPrimaryDark"
+            app:layout_collapseMode="pin" />
+
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v4.widget.NestedScrollView
+        android:id="@+id/content_dynamic_durations"
+        android:layout_width="match_parent"
+        android:fillViewport="true"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:context=".ProviderProfileActivity">
+
+        <LinearLayout
+            android:paddingStart="12dp"
+            android:paddingLeft="12dp"
+            android:paddingEnd="12dp"
+            android:paddingRight="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <android.support.v4.view.ViewPager
+                android:id="@+id/viewpager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </LinearLayout>
+
+    </android.support.v4.widget.NestedScrollView>
+
+    <android.support.design.widget.FloatingActionButton
+        style="@style/Widget.MaterialComponents.FloatingActionButton"
+        android:id="@+id/fab_call"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:tint="@color/textColorPrimary"
+        android:layout_marginEnd="@dimen/fab_margin"
+        android:layout_marginBottom="@dimen/fab_margin"
+        app:srcCompat="@drawable/manong_phone"
+        app:backgroundTint="?android:attr/colorAccent"
+        app:layout_anchor="@id/tabs"
+        app:layout_anchorGravity="top|end"
+        tools:targetApi="lollipop" />
+
+    <RelativeLayout
+        android:background="@color/loginPageBackgroundColor"
+        android:elevation="20dp"
+        android:id="@+id/loading_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:targetApi="lollipop">
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_centerInParent="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
+
+</android.support.design.widget.CoordinatorLayout>

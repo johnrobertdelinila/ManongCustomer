@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Build;
@@ -53,6 +54,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -115,9 +117,9 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
         mapContainer = findViewById(R.id.map_container);
         checklistContainer = findViewById(R.id.checklist_container);
         item = getIntent().getParcelableExtra(INTENT_EXTRA_ITEM);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         toolbar.setNavigationIcon(android.support.v7.appcompat.R.drawable.abc_ic_ab_back_material);
         toolbar.setNavigationOnClickListener(view -> onBackPressed());
 
@@ -221,6 +223,21 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
+        try {
+            // Customise the styling of the base map using a JSON object defined
+            // in a raw resource file.
+            boolean success = mMap.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                            this, R.raw.manong_map_style));
+
+            if (!success) {
+                Log.e("ServiceDetailActivity", "Style parsing failed.");
+            }
+        } catch (Resources.NotFoundException e) {
+            Log.e("ServiceDetailActivity", "Can't find style. Error: ", e);
+        }
+
         mapContainer.setVisibility(FrameLayout.VISIBLE);
         findViewById(R.id.container_cut_button).setVisibility(CutCornerView.VISIBLE);
 
@@ -419,37 +436,14 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
 
             LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
 
-//            LocationAddress locationAddress = new LocationAddress();
-//            locationAddress.getAddressFromLocation(latLng.latitude, latLng.longitude, getApplicationContext(), new GeocoderHandler());
-
             MarkerOptions markerOptions = new MarkerOptions();
             markerOptions.position(latLng);
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
             markerOptions.title("Your location");
             marker = mMap.addMarker(markerOptions);
 
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17.0f));
 
-//            LatLngBounds.Builder builder = new LatLngBounds.Builder();
-//            builder.include(new LatLng(16.246178420796923, 120.30559760461585));
-//            builder.include(new LatLng(16.95508074477375, 120.58643561731117));
-//            LatLngBounds bounds = builder.build();
-//
-//            MarkerOptions markerOptions = new MarkerOptions();
-//            markerOptions.position(new LatLng(16.246178420796923, 120.30559760461585));
-//            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-//            markerOptions.title("Your location");
-//            mMap.addMarker(markerOptions);
-//
-//            MarkerOptions markerOptions2 = new MarkerOptions();
-//            markerOptions2.position(new LatLng(16.95508074477375, 120.58643561731117));
-//            markerOptions2.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-//            markerOptions2.title("Your location");
-//            mMap.addMarker(markerOptions2);
-//
-//            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(new LatLngBounds(
-//                    new LatLng(16.246178420796923, 120.30559760461585),
-//                    new LatLng(16.95508074477375, 120.58643561731117)), 17));
         }
     }
 
@@ -478,7 +472,6 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
             if (resultCode == RESULT_CANCELED){
                 Log.e("TANGA", "TANGA");
             }
-
         }
     }
 
@@ -494,14 +487,10 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
     }
 
     @Override
-    public void onConnectionSuspended(int i) {
-
-    }
+    public void onConnectionSuspended(int i) { }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) { }
 
     @Override
     public void onLocationChanged(Location location) {

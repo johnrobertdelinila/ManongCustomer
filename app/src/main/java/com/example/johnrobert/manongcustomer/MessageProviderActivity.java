@@ -108,11 +108,16 @@ public class MessageProviderActivity extends AppCompatActivity {
     private FirebaseUser mFirebaseUser = mFirebaseAuth.getCurrentUser();
     private DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
     private DatabaseReference messagesRef = rootRef.child("Messages");
+    private DatabaseReference providerRef = rootRef.child("Providers");
     private boolean doneSettingUp;
 
     private String providerId;
     private String providerName;
     private String providerPhoto;
+    private String providerPhoneNumber;
+
+    private Intent intentProviderProfile;
+    private ProviderProfile providerProfile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,10 +135,27 @@ public class MessageProviderActivity extends AppCompatActivity {
         providerId = getIntent().getStringExtra("providerId");
         providerName = getIntent().getStringExtra("providerName");
         providerPhoto = getIntent().getStringExtra("providerPhoto");
+        providerPhoneNumber = getIntent().getStringExtra("providerPhoneNumber");
+        providerProfile = (ProviderProfile) getIntent().getSerializableExtra("providerProfile");
         doneSettingUp = false;
 
+        intentProviderProfile = new Intent(MessageProviderActivity.this, ProviderProfileActivity.class);
+        intentProviderProfile.putExtra("providerId", providerId);
+
+        intentProviderProfile.putExtra("providerDisplayName", providerName);
+        intentProviderProfile.putExtra("providerPhotoUrl", providerPhoto);
+        intentProviderProfile.putExtra("providerPhoneNumber", providerPhoneNumber);
+        intentProviderProfile.putExtra("providerProfile", providerProfile);
+
+        if (providerName == null && providerPhoto == null && providerPhoneNumber == null) {
+            getProviderProfile(providerId, intentProviderProfile);
+        }
+
+        if (providerProfile == null) {
+            getProviderProfile2(providerId, intentProviderProfile);
+        }
+
         if (mFirebaseUser != null){
-            
             // Getting the name from Firebase User
             mUsername = mFirebaseUser.getDisplayName();
             // Checking if the username is null,
@@ -385,6 +407,12 @@ public class MessageProviderActivity extends AppCompatActivity {
             @Override
             protected void onBindViewHolder(@NonNull MessageViewHolder holder, int position, @NonNull ManongMessage message) {
 
+                if (message.getUid().equals(providerId)) {
+                    holder.messengerImageView.setOnClickListener(view -> startActivity(intentProviderProfile));
+                }else {
+                    holder.messengerImageView.setClickable(false);
+                }
+
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (message.getText() != null) {
                     holder.messageTextView.setText(message.getText());
@@ -425,6 +453,7 @@ public class MessageProviderActivity extends AppCompatActivity {
                             .load(message.getPhotoUrl())
                             .into(holder.messengerImageView);
                 }
+
             }
         };
 
@@ -449,14 +478,44 @@ public class MessageProviderActivity extends AppCompatActivity {
         doneSettingUp = true;
     }
 
+    private void getProviderProfile(String uid, Intent intentProviderProfile) {
+        getUserRecord(uid).addOnCompleteListener(task -> {
+            if (!task.isSuccessful()) {
+                Exception e = task.getException();
+                if (e instanceof FirebaseFunctionsException) {
+                    FirebaseFunctionsException ffe = (FirebaseFunctionsException) e;
+                    FirebaseFunctionsException.Code code = ffe.getCode();
+                    Object details = ffe.getDetails();
+                    Toast.makeText(MessageProviderActivity.this, "Error: " + String.valueOf(details), Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
+
+            String displayName = (String) task.getResult().get("displayName");
+            String photoURL = (String) task.getResult().get("photoURL");
+            String phoneNumber = (String) task.getResult().get("phoneNumber");
+
+            if (photoURL != null) {
+                if (photoURL.startsWith("https://graph.facebook.com")) {
+                    photoURL = photoURL.concat("?height=130");
+                }
+            }
+
+            intentProviderProfile.putExtra("providerDisplayName", displayName);
+            intentProviderProfile.putExtra("providerPhotoUrl", photoURL);
+            intentProviderProfile.putExtra("providerPhoneNumber", phoneNumber);
+
+        });
+    }
+
     @Override
     public void onPause() {
         if (mAdView != null) {
             mAdView.pause();
         }
-        if (mFirebaseAdapter != null) {
-            mFirebaseAdapter.stopListening();
-        }
+//        if (mFirebaseAdapter != null) {
+//            mFirebaseAdapter.stopListening();
+//        }
         super.onPause();
     }
 
@@ -487,7 +546,25 @@ public class MessageProviderActivity extends AppCompatActivity {
         if (mAdView != null) {
             mAdView.destroy();
         }
+        if (mFirebaseAdapter != null) {
+            mFirebaseAdapter.stopListening();
+        }
         super.onDestroy();
+    }
+
+    private void getProviderProfile2(String providerId, Intent intent) {
+        providerRef.child(providerId).child("my_profile").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ProviderProfile providerProfile = dataSnapshot.getValue(ProviderProfile.class);
+                intent.putExtra("providerProfile", providerProfile);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.card.MaterialCardView
+    style="@style/Widget.MaterialComponents.CardView"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:stateListAnimator="@animator/raise"
+    tools:targetApi="lollipop"
+    app:cardCornerRadius="0dp"
+    app:cardElevation="0.7dp">
+
+    <com.example.johnrobert.manongcustomer.ForegroundConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorAccent"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/implementation_imge"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:src="@drawable/no_image"
+            android:contentDescription="@string/main_content_description_implementation_image"
+            android:scaleType="centerCrop"
+            app:layout_constraintDimensionRatio="w,1:1"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.elyeproj.loaderviewlibrary.LoaderImageView
+            android:id="@+id/implementation_imge_temp"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:use_gradient="true"
+            app:layout_constraintDimensionRatio="w,1:1"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </com.example.johnrobert.manongcustomer.ForegroundConstraintLayout>
+
+</android.support.design.card.MaterialCardView>
+

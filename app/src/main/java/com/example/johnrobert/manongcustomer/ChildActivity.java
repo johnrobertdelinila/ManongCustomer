@@ -50,6 +50,7 @@ public class ChildActivity extends AppCompatActivity {
     private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
     private DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
     private DatabaseReference quotesRef = rootRef.child("Quotes");
+    private DatabaseReference providerRef = rootRef.child("Providers");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +69,7 @@ public class ChildActivity extends AppCompatActivity {
                 findViewById(R.id.second_container).setVisibility(RelativeLayout.GONE);
                 findViewById(R.id.scroll_provider_container).setVisibility(ScrollView.VISIBLE);
                 // TODO: Generate List Of Service Providers
-                generateServiceProviders(request.getQuotes());
+                generateServiceProviders(request.getQuotes(), request.getKey());
             }
 
         }
@@ -95,7 +96,7 @@ public class ChildActivity extends AppCompatActivity {
 
     }
 
-    private void generateServiceProviders(HashMap<String, String> serviceProviders) {
+    private void generateServiceProviders(HashMap<String, String> serviceProviders, String requestKey) {
         LinearLayout rootContainer = findViewById(R.id.service_provider_container);
         for (String providerId: serviceProviders.keySet()) {
 
@@ -110,10 +111,20 @@ public class ChildActivity extends AppCompatActivity {
 
             rating.setRating(4.5f);
 
+            Intent intentProviderProfile = new Intent(ChildActivity.this, ProviderProfileActivity.class);
+            intentProviderProfile.putExtra("providerId", providerId);
+            intentProviderProfile.putExtra("requestKey", requestKey);
+            intentProviderProfile.putExtra("serviceKey", serviceProviders.get(providerId));
+
+            profileImage.setOnClickListener(view -> startActivity(intentProviderProfile));
+            temp_image.setOnClickListener(view -> startActivity(intentProviderProfile));
+
             rootContainer.addView(cardView);
 
             String quoteId = serviceProviders.get(providerId);
             Intent intent = new Intent(this, MessageProviderActivity.class);
+
+            getProviderProfile(providerId, intentProviderProfile, intent);
 
             if (user != null) {
                 String messageLinkKey = user.getUid() + providerId;
@@ -138,7 +149,7 @@ public class ChildActivity extends AppCompatActivity {
                         date.setText("Service Date: " + quote.getDate());
                         price.setText("₱ " + convertNumber(quote.getQuotePrice().get("minimum")) + " - " + convertNumber(quote.getQuotePrice().get("maximum")));
                         lump_sum.setText("Lump Sum");
-                        setProviderName(providerName, profileImage, providerId, temp_image, intent);
+                        setProviderName(providerName, profileImage, providerId, temp_image, intent, intentProviderProfile);
                     }
                 }
 
@@ -150,7 +161,24 @@ public class ChildActivity extends AppCompatActivity {
         }
     }
 
-    private void setProviderName(TextView providerName, CircleImageView profileImage, String uid, CardView temp_image, Intent intent) {
+    private void getProviderProfile(String providerId, Intent intent, Intent intent2) {
+        providerRef.child(providerId).child("my_profile").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ProviderProfile providerProfile = dataSnapshot.getValue(ProviderProfile.class);
+                intent.putExtra("providerProfile", providerProfile);
+                intent2.putExtra("providerProfile", providerProfile);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void setProviderName(TextView providerName, CircleImageView profileImage, String uid,
+                                 CardView temp_image, Intent intent, Intent intentProvider) {
         getUserRecord(uid)
                 .addOnCompleteListener(task -> {
                     if (!task.isSuccessful()) {
@@ -167,6 +195,7 @@ public class ChildActivity extends AppCompatActivity {
                     Map<String, Object> result = task.getResult();
                     String displayName = (String) result.get("displayName");
                     String photoURL = (String) result.get("photoURL");
+                    String phoneNumber = (String) result.get("phoneNumber");
 
                     if (displayName != null && displayName.trim().equalsIgnoreCase("") || displayName == null) {
                         providerName.setText(ANONYMOUS);
@@ -185,6 +214,12 @@ public class ChildActivity extends AppCompatActivity {
                     temp_image.setVisibility(CardView.GONE);
 
                     intent.putExtra("providerName", displayName);
+                    intent.putExtra("providerPhoto", photoURL);
+                    intent.putExtra("providerPhoneNumber", phoneNumber);
+
+                    intentProvider.putExtra("providerDisplayName", displayName);
+                    intentProvider.putExtra("providerPhotoUrl", photoURL);
+                    intentProvider.putExtra("providerPhoneNumber", phoneNumber);
 
                 });
     }

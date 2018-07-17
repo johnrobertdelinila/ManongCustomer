@@ -49,6 +49,12 @@
         <item name="android:textSize">16sp</item>
     </style>
 
+
+    <style name="TextAppearance.Manong.Toolbar.Profile" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textSize">19sp</item>
+        <item name="android:fontFamily">@font/rubik_medium</item>
+    </style>
+
     <style name="TextAppearance.Manong.Title" parent="TextAppearance.MaterialComponents.Headline4">
         <item name="android:fontFamily" tools:targetApi="jelly_bean">@font/rubik</item>
         <item name="android:textSize">34sp</item>
@@ -194,6 +200,10 @@
         <!--<item name="titleTextAppearance">@style/TextAppearance.Manong.Toolbar</item>-->
     </style>
 
+    <style name="Widget.Manong.Toolbar.Profile" parent="Widget.AppCompat.Toolbar">
+        <item name="titleTextAppearance">@style/TextAppearance.Manong.Toolbar.Profile</item>
+    </style>
+
     <style name="Widget.Manong.Toolbar.Job" parent="Widget.AppCompat.Toolbar">
         <item name="android:background">?attr/colorPrimaryDark</item>
         <item name="android:theme">@style/Theme.Manong</item>
@@ -321,9 +331,27 @@
         <item name="android:textColor">@color/textColorPrimary</item>
     </style>
 
+    <style name="ProfileTextAppearance" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/rubik</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+    <style name="ProfileTitleTextAppearance" parent="TextAppearance.MaterialComponents.Button">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/rubik</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
     <style name="MoreTextAppearance" parent="TextAppearance.MaterialComponents.Subtitle1">
         <item name="android:textSize">16sp</item>
         <item name="android:fontFamily">@font/rubik_medium</item>
+    </style>
+
+    <style name="TabTextAppearance" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:fontFamily">@font/rubik</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
 </resources>

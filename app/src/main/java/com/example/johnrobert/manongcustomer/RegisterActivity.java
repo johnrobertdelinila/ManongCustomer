@@ -347,6 +347,7 @@ public class RegisterActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         // Successfully updated the user.
                         // Go to next activity.
+                        Toast.makeText(this, "Registered successfully.", Toast.LENGTH_SHORT).show();
                         Intent homeIntent = new Intent(this, ManongActivity.class);
                         finish();
                         startActivity(homeIntent);

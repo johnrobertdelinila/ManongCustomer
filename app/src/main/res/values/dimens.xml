@@ -20,7 +20,7 @@
 
     <dimen name="dialog_corners">2dp</dimen>
     <dimen name="fab_size">56dp</dimen>
-
+    <dimen name="image_size">140dp</dimen>
 
     <dimen name="z_fab">6dp</dimen>
 </resources>
