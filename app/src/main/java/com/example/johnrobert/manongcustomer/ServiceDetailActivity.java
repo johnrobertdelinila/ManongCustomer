@@ -6,6 +6,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,13 +22,16 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPropertyAnimatorListener;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.widget.NestedScrollView;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -51,6 +59,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -58,13 +67,16 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class ServiceDetailActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class ServiceDetailActivity extends AppCompatActivity implements OnMapReadyCallback,
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
 
     public final static String RESULT_EXTRA_ITEM_ID = "RESULT_EXTRA_ITEM_ID";
     public static final String INTENT_EXTRA_ITEM = "item";
     private static final int PERMISSION_REQUEST_CODE = 1000;
     private static final int GOOGLE_PLAY_SERVICES_REQUEST_CODE = 2000;
+
+    public static boolean isDone = false;
 
     private ImplementationItem item;
     private GoogleMap mMap;
@@ -75,6 +87,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
     private MaterialCardView cardMap;
     private MaterialButton btnMap;
     private MaterialAnimatedSwitch switchLocation;
+    private CollapsingToolbarLayout collapsingToolbarLayout;
 
     // Map
     public GoogleApiClient googleApiClient;
@@ -112,16 +125,46 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_service_detail);
+        try {
 
-        mapContainer = findViewById(R.id.map_container);
-        checklistContainer = findViewById(R.id.checklist_container);
-        item = getIntent().getParcelableExtra(INTENT_EXTRA_ITEM);
+            setContentView(R.layout.activity_service_detail);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setNavigationIcon(android.support.v7.appcompat.R.drawable.abc_ic_ab_back_material);
-        toolbar.setNavigationOnClickListener(view -> onBackPressed());
+            mapContainer = findViewById(R.id.map_container);
+            checklistContainer = findViewById(R.id.checklist_container);
+            item = getIntent().getParcelableExtra(INTENT_EXTRA_ITEM);
+            collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
+
+            Toolbar toolbar = findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
+            toolbar.setNavigationIcon(android.support.v7.appcompat.R.drawable.abc_ic_ab_back_material);
+            toolbar.setNavigationOnClickListener(view -> onBackPressed());
+
+            Bitmap bitmapImage = BitmapFactory.decodeResource(getResources(), item.imageRes);
+            Palette.from(bitmapImage).generate(palette -> {
+                if (palette == null) {
+                    return;
+                }
+
+                Palette.Swatch pickedColor = palette.getDarkVibrantSwatch();
+                if (pickedColor == null) {
+                    pickedColor = palette.getVibrantSwatch();
+                    if (pickedColor == null) {
+                        pickedColor = palette.getLightMutedSwatch();
+                    }
+                }
+
+                if (pickedColor != null) {
+
+                    findViewById(R.id.scrim_color).setBackgroundColor(pickedColor.getRgb());
+                    findViewById(R.id.scrim_color).getBackground().setAlpha(64);
+
+                    collapsingToolbarLayout.setExpandedTitleTextAppearance(R.style.Expanded);
+                }
+            });
+
+        }catch (Exception e) {
+            Log.e("ServiceDetailActivity", e.getMessage());
+        }
 
         setupViews();
 
@@ -135,14 +178,13 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
 
     @SuppressLint("ClickableViewAccessibility")
     public void setupViews() {
-        final CollapsingToolbarLayout collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
 
-        final ImageView imageView = findViewById(R.id.detail_image);
+        ImageView imageView = findViewById(R.id.detail_image);
 
-        collapsingToolbarLayout.setExpandedTitleTextAppearance(R.style.Expanded);
+//        collapsingToolbarLayout.setExpandedTitleTextAppearance(R.style.Expanded);
         collapsingToolbarLayout.setCollapsedTitleTextAppearance(R.style.Collapsed);
 
-        final ImageView allShareRowImage = findViewById(R.id.all_element_share_image);
+        ImageView allShareRowImage = findViewById(R.id.all_element_share_image);
 
         imageView.setImageResource(item.imageRes);
 
@@ -156,7 +198,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
             collapsingToolbarLayout.setTitle(item.title);
             setUpMap();
             checklistContainer.setVisibility(FrameLayout.VISIBLE);
-
+            mapContainer.setVisibility(FrameLayout.VISIBLE);
         });
 
         ((TextView) findViewById(R.id.all_content_element_share_text)).setText(item.title + " checklist ");
@@ -169,7 +211,9 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        }
     }
 
 
@@ -177,7 +221,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
         final MaterialCardView cardView = findViewById(R.id.all_element_share_card);
         cardView.setOnClickListener(v -> {
 
-            final Intent intent = new Intent(ServiceDetailActivity.this, ChecklistActivity.class);
+            Intent intent = new Intent(ServiceDetailActivity.this, ChecklistActivity.class);
             Bundle bundle = new Bundle();
             Service service = item.service;
             // Dummy Lat Lng
@@ -198,7 +242,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
             bundle.putSerializable("service", service);
             intent.putExtras(bundle);
 
-            final ActivityOptionsCompat optionsCompat =
+            ActivityOptionsCompat optionsCompat =
                     ActivityOptionsCompat.makeSceneTransitionAnimation(ServiceDetailActivity.this, cardView, getString(R.string.transition_name_all_element_share));
             ActivityCompat.startActivity(ServiceDetailActivity.this, intent, optionsCompat.toBundle());
 
@@ -237,15 +281,14 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
         } catch (Resources.NotFoundException e) {
             Log.e("ServiceDetailActivity", "Can't find style. Error: ", e);
         }
-
-        mapContainer.setVisibility(FrameLayout.VISIBLE);
-        findViewById(R.id.container_cut_button).setVisibility(CutCornerView.VISIBLE);
+//        findViewById(R.id.container_cut_button).setVisibility(CutCornerView.VISIBLE);
 
         btnMap.setOnClickListener(new View.OnClickListener() {
             boolean isSmall = true;
             @Override
             public void onClick(View view) {
                 if (isSmall) {
+                    btnMap.setText("MINIMIZE MAP");
                     ViewCompat
                             .animate(cardMap)
                             .scaleX(1.0f)
@@ -281,6 +324,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
                             .start();
 
                 } else {
+                    btnMap.setText("MAXIMIZE MAP");
                     ViewCompat
                             .animate(cardMap)
                             .scaleX(0.5f)
@@ -424,6 +468,29 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
         locationRequest.setSmallestDisplacement(500);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (isDone) {
+            isDone = false;
+
+            ManongActivity.isDoneFromService = true;
+//            onBackPressed();
+
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this, R.style.ManongDialogTheme);
+            dialog.setTitle("Request");
+            dialog.setMessage("You've just submitted a request. Do you want to view your request now?");
+            dialog.setNegativeButton("NO", (dialogInterface, i) -> dialogInterface.dismiss());
+            dialog.setPositiveButton("YES", (dialogInterface, i) -> startActivity(new Intent(ServiceDetailActivity.this, ManongActivity.class)));
+            AlertDialog outDialog = dialog.create();
+            outDialog.show();
+            outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+            outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTypeface(Typeface.DEFAULT_BOLD);
+            outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+            outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTypeface(Typeface.DEFAULT_BOLD);
+        }
+    }
+
     private void setLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -458,19 +525,6 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
                 }
             }else {
                 Toast.makeText(this, "You can allow the permission request in settings.", Toast.LENGTH_LONG).show();
-            }
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 1) {
-            Log.e("HELLO", "HELLO");
-            if (resultCode == RESULT_OK) {
-                onBackPressed();
-            }
-            if (resultCode == RESULT_CANCELED){
-                Log.e("TANGA", "TANGA");
             }
         }
     }

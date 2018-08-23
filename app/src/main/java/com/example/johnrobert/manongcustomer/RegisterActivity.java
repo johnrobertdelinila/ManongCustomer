@@ -1,15 +1,13 @@
 package com.example.johnrobert.manongcustomer;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
-import android.support.annotation.NonNull;
+import android.os.Bundle;
 import android.support.design.button.MaterialButton;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.transition.Slide;
@@ -21,19 +19,13 @@ import android.view.Window;
 import android.widget.Toast;
 
 import com.alimuzaffar.lib.pin.PinEntryEditText;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
-import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
-import com.google.firebase.auth.ProviderQueryResult;
-import com.google.firebase.auth.SignInMethodQueryResult;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -49,12 +41,8 @@ public class RegisterActivity extends AppCompatActivity {
     private TextInputLayout emailTextInput, fullNameTextInput, phoneTextInput, passwordTextInput, confirmTextInput;
     private MaterialButton register_button;
 
-    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
     private PhoneAuthProvider.ForceResendingToken mResendToken;
-    private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
-    private DatabaseReference rootRef = mDatabase.getReference();
-    private DatabaseReference customerRef = rootRef.child("Customers");
 
     private String mVerificationId;
     private String email;
@@ -135,9 +123,7 @@ public class RegisterActivity extends AppCompatActivity {
         dialog.setTitle("Phone Number Validation");
         dialog.setMessage("Enter the verification code that been sent to your device.");
         dialog.setCancelable(false);
-        dialog.setNegativeButton("CANCEL", (dialogInterface, i) ->  {
-            dialogInterface.dismiss();
-        });
+        dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
         View view = getLayoutInflater().inflate(R.layout.layout_validation_code, null);
         PinEntryEditText editVerificationCode = view.findViewById(R.id.text_verification_code);
         dialog.setView(view);
@@ -239,23 +225,23 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private boolean isPasswordValid(Editable text) {
-        return text == null || text.length() >= 6;
+        return text == null || text.toString().trim().length() >= 6;
     }
 
     private boolean isEmailValid(Editable text) {
-        return text != null && text.length() != 0 && Patterns.EMAIL_ADDRESS.matcher(text).matches();
+        return text != null && text.toString().trim().length() != 0 && Patterns.EMAIL_ADDRESS.matcher(text.toString().trim()).matches();
     }
 
     private boolean isEmpty(Editable text) {
-        return text == null || text.length() == 0;
+        return text == null || text.toString().trim().length() == 0;
     }
 
     private boolean isPhoneValid(Editable text) {
-        return text != null && text.length() == 10;
+        return text != null && text.toString().trim().length() == 10;
     }
 
     private boolean isPasswordEqual(Editable password, Editable confirmPassword) {
-        return password.toString().equals(confirmPassword.toString());
+        return password.toString().trim().equals(confirmPassword.toString().trim());
     }
 
     private void setUpToolbar() {
@@ -265,18 +251,29 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void setUpEnterTransition() {
+//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+//            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+//            Slide slide = new Slide(Gravity.END);
+//            slide.excludeTarget(android.R.id.statusBarBackground, true);
+//            slide.excludeTarget(android.R.id.navigationBarBackground, true);
+//            getWindow().setEnterTransition(slide);
+//        }
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
             Slide slide = new Slide(Gravity.END);
             slide.excludeTarget(android.R.id.statusBarBackground, true);
             slide.excludeTarget(android.R.id.navigationBarBackground, true);
+
+            Slide slide1 = new Slide(Gravity.START);
+
             getWindow().setEnterTransition(slide);
+            getWindow().setExitTransition(slide1);
         }
     }
 
     private void verifyPhoneNumberWithCode(String code, PinEntryEditText codeInput) {
         PhoneAuthCredential credential = PhoneAuthProvider.getCredential(mVerificationId, code);
-        mAuth.signInWithCredential(credential)
+        MainActivity.mAuth.signInWithCredential(credential)
                 .addOnSuccessListener(authResult -> authResult.getUser().delete()
                         .addOnCompleteListener(task -> {
                             // Successfully deleted the user and validate the Phone Number.
@@ -306,7 +303,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void createEmailAndPassword(PhoneAuthCredential credential) {
-        mAuth.createUserWithEmailAndPassword(emailEditText.getText().toString(), passwordEditText.getText().toString())
+        MainActivity.mAuth.createUserWithEmailAndPassword(emailEditText.getText().toString().trim(), passwordEditText.getText().toString().trim())
                 .addOnSuccessListener(authResult -> {
                     // Successfully created a user.
                     Log.e(activityName, "Successfully created a user.");
@@ -342,7 +339,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void updateCustomerAccount(String uid) {
-        customerRef.child(uid).child("customer").setValue("大原櫻子")
+        MainActivity.customerRef.child(uid).child("customer").setValue("大原櫻子")
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         // Successfully updated the user.

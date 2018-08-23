@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:padding="@dimen/padding_dialog_24dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/reason_text_input"
+        style="@style/Widget.Manong.TextInputLayout.Register"
+        android:hint="Reason"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/reason_edit_text"
+            android:inputType="textMultiLine"
+            android:lines="5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </android.support.design.widget.TextInputLayout>
+
+</LinearLayout>

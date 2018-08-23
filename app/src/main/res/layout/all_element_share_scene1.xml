@@ -14,8 +14,8 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_marginBottom="20dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp"
         android:layout_marginTop="20dp"
         android:contentDescription="@null" />
 
@@ -25,9 +25,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@id/all_element_share_image"
-        android:text="Checklist"
-        android:textSize="18sp"
-        style="@style/Widget.Manong.TextView.Checklist"
+        android:textAppearance="@style/Widget.Manong.TextView.Checklist"
         android:layout_toEndOf="@id/all_element_share_image" />
 
 </RelativeLayout>

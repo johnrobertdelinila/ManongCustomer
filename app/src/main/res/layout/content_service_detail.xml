@@ -5,7 +5,7 @@
     android:id="@+id/content_dynamic_durations"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
+    android:background="@color/serviceGridBackgroundColor"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".ServiceDetailActivity">
     <!-- tools:showIn="@layout/activity_dynamic_durations" -->
@@ -30,31 +30,84 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
-            <TextView
-                style="@style/Widget.Manong.TextView.Details"
-                android:text="@string/manong_step_1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <TextView
-                style="@style/Widget.Manong.TextView.Details"
-                android:text="@string/manong_step_2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <TextView
-                style="@style/Widget.Manong.TextView.Details"
-                android:text="@string/manong_step_3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <TextView
-                style="@style/Widget.Manong.TextView.Details"
-                android:text="@string/manong_step_5"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    style="@style/Widget.Manong.TextView.Details"
+                    android:text="1. "
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    style="@style/Widget.Manong.TextView.Details"
+                    android:text="@string/manong_step_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    style="@style/Widget.Manong.TextView.Details"
+                    android:text="2. "
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    style="@style/Widget.Manong.TextView.Details"
+                    android:text="@string/manong_step_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    style="@style/Widget.Manong.TextView.Details"
+                    android:text="3. "
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    style="@style/Widget.Manong.TextView.Details"
+                    android:text="@string/manong_step_3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    style="@style/Widget.Manong.TextView.Details"
+                    android:text="4. "
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    style="@style/Widget.Manong.TextView.Details"
+                    android:text="@string/manong_step_5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
         <View
             android:layout_marginTop="20dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="?android:listDivider" />
@@ -65,17 +118,17 @@
             android:layout_marginRight="24dp"
             android:layout_marginLeft="24dp"
             android:layout_marginBottom="4dp"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:fontFamily="@font/rubik"
-            android:textSize="23sp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+            android:fontFamily="@font/rubik_medium"
+            android:textSize="24sp"
             android:layout_height="wrap_content"
             android:layout_width="match_parent" />
 
         <TextView
-            android:text="Optional"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:text="OPTIONAL"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
             android:fontFamily="@font/rubik"
-            android:textSize="12sp"
+            android:textSize="14sp"
             android:layout_marginRight="24dp"
             android:layout_marginLeft="24dp"
             android:layout_marginBottom="10dp"
@@ -161,35 +214,16 @@
 
         </RelativeLayout>
 
-        <com.github.florent37.shapeofview.shapes.CutCornerView
-            android:visibility="invisible"
+        <android.support.design.button.MaterialButton
+            android:id="@+id/btn_toggle_map"
+            android:elevation="0dp"
+            android:layout_margin="5dp"
+            android:layout_gravity="center_horizontal"
+            style="@style/Widget.Manong.Button.Map"
+            android:text="Maximize Map"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:id="@+id/container_cut_button"
-            android:layout_margin="5dp"
-            app:shape_cutCorner_bottomLeftSize="12dp"
-            app:shape_cutCorner_bottomRightSize="12dp"
-            app:shape_cutCorner_topLeftSize="12dp"
-            app:shape_cutCorner_topRightSize="12dp">
-
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:targetApi="lollipop">
-
-                <android.support.design.button.MaterialButton
-                    android:id="@+id/btn_toggle_map"
-                    android:elevation="0dp"
-                    style="@style/Widget.Manong.Button.Map"
-                    android:text="Toggle Map"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    tools:targetApi="lollipop" />
-
-            </RelativeLayout>
-
-        </com.github.florent37.shapeofview.shapes.CutCornerView>
+            tools:targetApi="lollipop" />
 
         <FrameLayout
             android:id="@+id/checklist_container"
@@ -205,14 +239,14 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:text="Fill up the Checklist"
+                    android:text="Fill up the checklist"
                     android:layout_marginTop="36dp"
                     android:layout_marginRight="24dp"
                     android:layout_marginLeft="24dp"
                     android:layout_marginBottom="24dp"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-                    android:fontFamily="@font/rubik"
-                    android:textSize="23sp"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                    android:fontFamily="@font/rubik_medium"
+                    android:textSize="24sp"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent" />
 
@@ -222,10 +256,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="@dimen/spacing_normal_8dp"
-                    android:layout_marginLeft="@dimen/spacing_normal_8dp"
-                    android:layout_marginRight="@dimen/spacing_normal_8dp"
-                    android:layout_marginStart="@dimen/spacing_normal_8dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?android:attr/selectableItemBackground"
@@ -235,6 +265,7 @@
                     tools:targetApi="lollipop">
 
                     <include layout="@layout/all_element_share_scene1" />
+
                 </android.support.design.card.MaterialCardView>
 
             </LinearLayout>

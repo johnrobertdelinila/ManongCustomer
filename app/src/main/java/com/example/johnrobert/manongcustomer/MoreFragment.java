@@ -4,10 +4,13 @@ package com.example.johnrobert.manongcustomer;
 import android.app.Activity;
 import android.app.ActivityOptions;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.util.Log;
@@ -20,6 +23,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -44,17 +51,16 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class MoreFragment extends Fragment implements CompoundButton.OnCheckedChangeListener {
 
     private static final int REQUEST_CODE = 1000;
+    public static boolean isUpdated = false;
 
-    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    private FirebaseUser user =  mAuth.getCurrentUser();
-
-    private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
-    private DatabaseReference rootRef = mDatabase.getReference();
-    private DatabaseReference customerRef = rootRef.child("Customers");
+    private FirebaseUser user = ManongActivity.mUser;
 
     private Activity activity;
 
     private Switch switch_quotation, switch_messages, switch_jobs;
+    private CircleImageView userProfileImage;
+    private TextView userDisplayName, viewEditProfile;
+    private CardView tempImage;
 
     public MoreFragment() {
         // Required empty public constructor
@@ -69,6 +75,10 @@ public class MoreFragment extends Fragment implements CompoundButton.OnCheckedCh
         switch_quotation = view.findViewById(R.id.switch_quotation);
         switch_messages = view.findViewById(R.id.switch_messages);
         switch_jobs = view.findViewById(R.id.switch_completed_jobs);
+        userProfileImage = view.findViewById(R.id.user_profile_picture);
+        userDisplayName = view.findViewById(R.id.user_display_name);
+        viewEditProfile = view.findViewById(R.id.user_view_edit);
+        tempImage = view.findViewById(R.id.temp_image_view);
 
         switch_quotation.setOnCheckedChangeListener(this);
         switch_messages.setOnCheckedChangeListener(this);
@@ -76,7 +86,15 @@ public class MoreFragment extends Fragment implements CompoundButton.OnCheckedCh
 
         activity = getActivity();
 
-        getUserProfile(view);
+        getUserProfile();
+
+        if (ManongActivity.jobs != null)
+            switch_jobs.setChecked(ManongActivity.jobs);
+        if (ManongActivity.messages != null)
+            switch_messages.setChecked(ManongActivity.messages);
+        if (ManongActivity.quotation != null)
+            switch_quotation.setChecked(ManongActivity.quotation);
+
         view.findViewById(R.id.profile_container).setOnClickListener(profileview -> {
             Intent intent = new Intent(getActivity(), ProfileActivity.class);
 //            activity.startActivityForResult(intent, REQUEST_CODE);
@@ -108,55 +126,23 @@ public class MoreFragment extends Fragment implements CompoundButton.OnCheckedCh
 
         });
 
-        if (user != null) {
-            customerRef.child(user.getUid()).child("settings").addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    for (DataSnapshot childSnapshot: dataSnapshot.getChildren()) {
-                        String value = childSnapshot.getKey();
-                        if (value != null) {
-                            Boolean b = childSnapshot.getValue(boolean.class);
-                            if (b != null)  {
-                                if (value.equalsIgnoreCase("New Completed Jobs")) {
-                                    switch_jobs.setChecked(b);
-                                }else if (value.equalsIgnoreCase("New Messages")) {
-                                    switch_messages.setChecked(b);
-                                }else if (value.equalsIgnoreCase("New Quotations")) {
-                                    switch_quotation.setChecked(b);
-                                }
-                            }
-
-                        }
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                    Toast.makeText(activity, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-
         return view;
     }
 
     private void updateSettingsProfile(String value, boolean b) {
         if (user != null) {
-            customerRef.child(user.getUid()).child("settings").child(value).setValue(b);
+            MainActivity.customerRef.child(user.getUid()).child("settings").child(value).setValue(b);
         }
     }
 
-    private void getUserProfile(View view) {
+    private void getUserProfile() {
         if (user != null) {
-            CircleImageView userProfileImage = view.findViewById(R.id.user_profile_picture);
-            TextView userDisplayName = view.findViewById(R.id.user_display_name);
-            TextView viewEditProfile = view.findViewById(R.id.user_view_edit);
 
             String displayName = user.getDisplayName();
             String photoURL = String.valueOf(user.getPhotoUrl());
 
             if (activity != null && getContext() != null) {
-                if (displayName == null || displayName != null && displayName.equalsIgnoreCase("")) {
+                if (displayName != null && displayName.equalsIgnoreCase("") || displayName == null) {
                     displayName = "Anonymous";
                 }
                 userDisplayName.setText(displayName);
@@ -166,31 +152,25 @@ public class MoreFragment extends Fragment implements CompoundButton.OnCheckedCh
                     if (photoURL.startsWith("https://graph.facebook.com")) {
                         photoURL = photoURL.concat("?height=100");
                     }
-                    Glide.with(activity).load(photoURL).into(userProfileImage);
+                    Glide.with(activity.getApplicationContext())
+                            .load(photoURL)
+                            .listener(new RequestListener<Drawable>() {
+                                @Override
+                                public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                    userProfileImage.setImageDrawable(resource);
+                                    tempImage.setVisibility(CardView.GONE);
+                                    userProfileImage.setVisibility(CircleImageView.VISIBLE);
+                                    return false;
+                                }
+                            })
+                            .into(userProfileImage);
                 }
-                view.findViewById(R.id.temp_image_view).setVisibility(CardView.GONE);
-                userProfileImage.setVisibility(CircleImageView.VISIBLE);
             }
-        }
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                String requestDisplayName = data.getStringExtra("displayName");
-                String requestPhotoURL = data.getStringExtra("photoURL");
-
-                if (requestDisplayName != null) {
-
-                }
-                if (requestPhotoURL != null) {
-
-                }
-                Toast.makeText(activity, "HELLO WORLD", Toast.LENGTH_SHORT).show();
-            }
-            Toast.makeText(activity, "HELLO WORLD", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -198,5 +178,14 @@ public class MoreFragment extends Fragment implements CompoundButton.OnCheckedCh
     public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
         String value = compoundButton.getText().toString();
         updateSettingsProfile(value, b);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (isUpdated) {
+            getUserProfile();
+            isUpdated = false;
+        }
     }
 }

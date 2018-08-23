@@ -9,14 +9,18 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
@@ -39,12 +43,12 @@ public class RequestFragment extends Fragment {
     private Activity activity;
     private Context context;
     private int animatedRow = -1;
+    private boolean isRemoveCancelled = false;
 
-    private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
-    private DatabaseReference rootRef = mDatabase.getReference();
-    private DatabaseReference requestRef = rootRef.child("Request");
-    private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+    private FirebaseUser user = ManongActivity.mUser;
+
     private FirebaseRecyclerAdapter firebaseAdapter;
+    private Query queryUserId;
 
     private ProgressBar progressBar;
     private RecyclerView recyclerView;
@@ -61,22 +65,23 @@ public class RequestFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_request, container, false);
         activity = getActivity();
         context = getContext();
+        firebaseAdapter = null;
 
         progressBar = view.findViewById(R.id.progress_bar);
         recyclerView = view.findViewById(R.id.recycler_view);
         LinearLayoutManager mLinearManager = new LinearLayoutManager(activity);
-//        mLinearManager.setReverseLayout(true);
-//        mLinearManager.setStackFromEnd(true);
+        mLinearManager.setReverseLayout(true);
+        mLinearManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(mLinearManager);
         textNoData = view.findViewById(R.id.text_no_data);
 
         if (user != null) {
 
-            rootRef.addValueEventListener(new ValueEventListener() {
+            MainActivity.rootRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.hasChild("Request")) {
-                        Query queryUserId = requestRef.orderByChild("userId").equalTo(user.getUid());
+                        queryUserId = dataSnapshot.getRef().child("Request").orderByChild("userId").equalTo(user.getUid());
                         queryUserId.addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -92,10 +97,10 @@ public class RequestFragment extends Fragment {
 
                             @Override
                             public void onCancelled(@NonNull DatabaseError databaseError) {
-//                                Toast.makeText(activity, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(activity, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                             }
                         });
-                        rootRef.removeEventListener(this);
+                        MainActivity.rootRef.removeEventListener(this);
                     }else {
                         // No request is available.
                         progressBar.setVisibility(ProgressBar.GONE);
@@ -105,7 +110,26 @@ public class RequestFragment extends Fragment {
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError databaseError) {
-//                    Toast.makeText(activity, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+
+
+            ToggleButton filterButton = view.findViewById(R.id.filter_button);
+
+            filterButton.setOnClickListener(view12 -> {
+                if (filterButton.isChecked()) {
+                    Log.e("TOGGLE", "CHECK");
+                    isRemoveCancelled = true;
+                    if (queryUserId != null) {
+                        setUpFirebaseRecycler(queryUserId);
+                    }
+                }else {
+                    Log.e("TOGGLE", "UNCHECK");
+                    isRemoveCancelled = false;
+                    if (queryUserId != null) {
+                        setUpFirebaseRecycler(queryUserId);
+                    }
                 }
             });
 
@@ -122,6 +146,9 @@ public class RequestFragment extends Fragment {
             Request request = snapshot.getValue(Request.class);
             if (request != null) {
                 request.setKey(snapshot.getKey());
+                if (snapshot.hasChild("isCancelled")) {
+                    request.setCancelled(snapshot.child("isCancelled").getValue(Boolean.class));
+                }
             }
             return request;
         };
@@ -139,62 +166,112 @@ public class RequestFragment extends Fragment {
                 return new RequestViewHolder(view);
             }
 
-            @NonNull
-            @Override
-            public Request getItem(int position) {
-                return super.getItem(getItemCount() - 1 - position);
-            }
+//            @NonNull
+//            @Override
+//            public Request getItem(int position) {
+//                return super.getItem(getItemCount() - 1 - position);
+//                return super.getItem(getItemCount() - (position + 1));
+//            }
 
             @Override
             protected void onBindViewHolder(@NonNull RequestViewHolder holder, int position, @NonNull Request request) {
 
-                progressBar.setVisibility(ProgressBar.INVISIBLE);
+                if (isRemoveCancelled && request.getCancelled() != null && request.getCancelled()) {
+                    holder.itemView.setVisibility(View.GONE);
+                    holder.itemView.setLayoutParams(new RecyclerView.LayoutParams(1, 1));
+                }else {
+                    holder.itemView.setVisibility(View.VISIBLE);
+                    RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    params.setMargins(0, 10, 0, 10);
+                    holder.itemView.setLayoutParams(params);
 
-                holder.serviceName.setText(request.getServiceName());
-                if (request.getQuotes() != null) {
-                    int numOfQuotes = request.getQuotes().size();
-                    String builder = "View Quotes (" + numOfQuotes + ")";
-                    holder.quotes.setText(builder);
-                    holder.quotes.setTypeface(Typeface.DEFAULT_BOLD);
-                    holder.quotes.setTextColor(getResources().getColor(R.color.colorControlActivated));
-                }
+                    // Animation
+                    if (animatedRow == -1)
+                        animatedRow = position + 1;
 
-                for (String key: request.getQuestionsAndAnswers().keySet()) {
-                    if (key.substring(2).equalsIgnoreCase("When do you need it?")) {
-                        holder.date.setText(request.getQuestionsAndAnswers().get(key));
-                        break;
+                    if (position < animatedRow) {
+                        Log.e("EUT", String.valueOf(animatedRow));
+
+                        animatedRow = position;
+                        holder.itemView.setAlpha(0);
+
+                        long animationDelay = 500L + holder.getAdapterPosition() * 25;
+                        holder.itemView.animate()
+                                .alpha(1)
+                                .translationY(0)
+                                .setDuration(200)
+                                .setInterpolator(new LinearOutSlowInInterpolator())
+                                .setStartDelay(animationDelay)
+                                .start();
                     }
+
+                    //Service Name
+                    holder.serviceName.setText(request.getServiceName());
+                    // Date
+                    for (String key: request.getQuestionsAndAnswers().keySet()) {
+                        if (key.substring(2).equalsIgnoreCase("When do you need it?") || key.substring(2).toLowerCase().startsWith("when do you need")) {
+                            holder.date.setText(request.getQuestionsAndAnswers().get(key));
+                            break;
+                        }
+                    }
+                    // Quotes
+                    if (request.getQuotes() != null) {
+                        int numOfQuotes = request.getQuotes().size();
+                        String builder = "View Quotes (" + numOfQuotes + ")";
+                        holder.quotes.setText(builder);
+                        holder.quotes.setTypeface(Typeface.DEFAULT_BOLD);
+                        holder.quotes.setTextColor(getResources().getColor(R.color.colorControlActivated));
+                    }else {
+                        holder.quotes.setText("Your Quotes Are On The Way");
+                        holder.quotes.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
+                        holder.quotes.setTextColor(getResources().getColor(R.color.textColorPrimary));
+                    }
+
+                    // Booked Service
+                    if (request.getBooked() != null) {
+                        holder.booked.setVisibility(TextView.VISIBLE);
+                        holder.quotes.setVisibility(TextView.GONE);
+                    }else {
+                        holder.booked.setVisibility(TextView.GONE);
+                        holder.quotes.setVisibility(TextView.VISIBLE);
+                    }
+                    // Cancelled
+                    if (request.getCancelled() != null && request.getCancelled()) {
+                        holder.booked.setVisibility(TextView.VISIBLE);
+                        holder.quotes.setVisibility(View.GONE);
+
+                        holder.compare_cancelled.setText("Cancelled");
+                        holder.container_text.setBackgroundColor(getResources().getColor(R.color.textErrorColor));
+
+                        holder.booked.setText("You've cancelled this request");
+                    }else {
+                        holder.booked.setVisibility(TextView.GONE);
+                        holder.quotes.setVisibility(TextView.VISIBLE);
+
+                        holder.compare_cancelled.setText("Compare");
+                        holder.container_text.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+
+                        if (request.getBooked() != null) {
+                            Log.e("BOOKED", "MERON");
+                            holder.booked.setVisibility(TextView.VISIBLE);
+                            holder.quotes.setVisibility(TextView.GONE);
+                        }
+                    }
+
+                    holder.itemView.setOnClickListener(view -> {
+                        Intent intent = new Intent(context, ChildActivity.class);
+                        intent.putExtra("request", request);
+
+                        String elementName = getString(R.string.transition_name_navigational_transition);
+                        Pair cardSharedElement = Pair.create(view, elementName);
+                        Pair serviceNameSharedElement = Pair.create(holder.serviceName, "transition_service_name");
+                        ActivityOptionsCompat activityOptionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, cardSharedElement, serviceNameSharedElement);
+                        startActivity(intent, activityOptionsCompat.toBundle());
+                    });
+
                 }
 
-                if (request.getBookedService() != null ||
-                        request.getBookedService() != null && !request.getBookedService().trim().equalsIgnoreCase("")) {
-                    holder.booked.setVisibility(TextView.VISIBLE);
-                }
-
-                holder.itemView.setOnClickListener(view -> {
-                    Intent intent = new Intent(context, ChildActivity.class);
-                    intent.putExtra("request", request);
-                    String elementName = getString(R.string.transition_name_navigational_transition);
-                    ActivityOptionsCompat activityOptionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, view, elementName);
-                    startActivity(intent, activityOptionsCompat.toBundle());
-                });
-
-                // Animation
-                if (position > animatedRow) {
-                    animatedRow = position;
-                    long animationDelay = 200L + holder.getAdapterPosition() * 25;
-
-                    holder.itemView.setAlpha(0);
-//                    holder.itemView.setTranslationY(ScreenUtil.dp2px(8, holder.itemView.getContext()));
-
-                    holder.itemView.animate()
-                            .alpha(1)
-                            .translationY(0)
-                            .setDuration(200)
-                            .setInterpolator(new LinearOutSlowInInterpolator())
-                            .setStartDelay(animationDelay)
-                            .start();
-                }
+                progressBar.setVisibility(ProgressBar.INVISIBLE);
 
             }
 

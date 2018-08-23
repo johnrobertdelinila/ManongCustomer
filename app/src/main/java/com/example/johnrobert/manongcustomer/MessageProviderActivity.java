@@ -15,8 +15,10 @@
  */
 package com.example.johnrobert.manongcustomer;
 
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.button.MaterialButton;
@@ -41,6 +43,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.ads.AdRequest;
@@ -408,7 +412,15 @@ public class MessageProviderActivity extends AppCompatActivity {
             protected void onBindViewHolder(@NonNull MessageViewHolder holder, int position, @NonNull ManongMessage message) {
 
                 if (message.getUid().equals(providerId)) {
-                    holder.messengerImageView.setOnClickListener(view -> startActivity(intentProviderProfile));
+                    holder.messengerImageView.setOnClickListener(view -> {
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                            startActivity(intentProviderProfile);
+                        } else {
+                            final ActivityOptions options = ActivityOptions
+                                    .makeSceneTransitionAnimation(MessageProviderActivity.this, view, "iyot_buto_uki");
+                            startActivity(intentProviderProfile, options.toBundle());
+                        }
+                    });
                 }else {
                     holder.messengerImageView.setClickable(false);
                 }
@@ -429,6 +441,7 @@ public class MessageProviderActivity extends AppCompatActivity {
                                         String downloadUrl = task.getResult().toString();
                                         Glide.with(getApplicationContext())
                                                 .load(downloadUrl)
+                                                .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
                                                 .into(holder.messageImageView);
                                     } else {
                                         Log.w(TAG, "Getting download url was not successful.",
@@ -438,6 +451,7 @@ public class MessageProviderActivity extends AppCompatActivity {
                     } else {
                         Glide.with(getApplicationContext())
                                 .load(message.getImageUrl())
+                                .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
                                 .into(holder.messageImageView);
                     }
                     holder.messageImageView.setVisibility(ImageView.VISIBLE);
@@ -451,6 +465,7 @@ public class MessageProviderActivity extends AppCompatActivity {
                 } else {
                     Glide.with(getApplicationContext())
                             .load(message.getPhotoUrl())
+                            .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
                             .into(holder.messengerImageView);
                 }
 
@@ -530,16 +545,16 @@ public class MessageProviderActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onStop() {
-        if (mAdView != null) {
-            mAdView.pause();
-        }
-        if (mFirebaseAdapter != null) {
-            mFirebaseAdapter.stopListening();
-        }
-        super.onStop();
-    }
+//    @Override
+//    protected void onStop() {
+//        if (mAdView != null) {
+//            mAdView.pause();
+//        }
+//        if (mFirebaseAdapter != null) {
+//            mFirebaseAdapter.stopListening();
+//        }
+//        super.onStop();
+//    }
 
     @Override
     public void onDestroy() {

@@ -4,38 +4,32 @@ package com.example.johnrobert.manongcustomer;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.button.MaterialButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.graphics.Palette;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.transition.Transition;
-import com.google.android.gms.tasks.Task;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.firebase.ui.database.SnapshotParser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.functions.FirebaseFunctions;
-import com.google.firebase.functions.FirebaseFunctionsException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 
 /**
@@ -43,12 +37,8 @@ import java.util.Map;
  */
 public class AboutFragment extends Fragment {
 
-    private FirebaseFunctions mFunctions = FirebaseFunctions.getInstance();
-    private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
-    private DatabaseReference rootRef = mDatabase.getReference();
-    private DatabaseReference providerRef = rootRef.child("Providers");
-    private DatabaseReference requestRef = rootRef.child("Request");
     private DatabaseReference profileRef;
+    private FirebaseRecyclerAdapter firebaseAdapter;
 
     private Activity activity;
     private Context context;
@@ -57,69 +47,145 @@ public class AboutFragment extends Fragment {
     private String requestKey;
     private String serviceKey;
 
-    private MaterialButton bookButton;
-    private LinearLayout linearContainer;
-    private RelativeLayout loadingContainer;
+    private ProgressBar progressBar;
     private ArrayList<TextView> textViews;
+
+    private RecyclerView recyclerView;
 
     public AboutFragment() {
         // Required empty public constructor
     }
 
+    public class About {
+        String title, info;
+
+        public About() {}
+
+        public About(String title, String info) {
+            this.title = title;
+            this.info = info;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public String getInfo() {
+            return info;
+        }
+
+        public void setInfo(String info) {
+            this.info = info;
+        }
+    }
+
+    public class AboutViewHolder extends RecyclerView.ViewHolder {
+
+        TextView title;
+
+        public AboutViewHolder(@NonNull View itemView) {
+            super(itemView);
+            title = itemView.findViewById(R.id.text_title);
+        }
+    }
+
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_about, container, false);
 
         activity = getActivity();
         context = getContext();
+
         providerId = getArguments().getString("providerId");
         providerPhotoUrl = getArguments().getString("providerPhotoUrl");
+
         requestKey = getArguments().getString("requestKey");
         serviceKey = getArguments().getString("serviceKey");
-        profileRef = providerRef.child(providerId).child("my_profile");
 
-        linearContainer = view.findViewById(R.id.linear_container);
-        loadingContainer = view.findViewById(R.id.loading_container);
-        bookButton = view.findViewById(R.id.book_button);
+        progressBar = view.findViewById(R.id.progress_bar);
+        recyclerView = view.findViewById(R.id.recycler_view);
 
-        ProviderProfile providerProfile = (ProviderProfile) getArguments().getSerializable("providerProfile");
+        recyclerView.setLayoutManager(new LinearLayoutManager(activity));
+        recyclerView.addItemDecoration(new DividerItemDecoration(activity, DividerItemDecoration.VERTICAL));
 
-        if (providerProfile != null) {
-            setProviderValue(providerProfile);
-        }else {
-            setupProviderProfile();
+        if (ProviderProfileActivity.sakuChan != null) {
+            progressBar.getIndeterminateDrawable().setColorFilter(ProviderProfileActivity.sakuChan.getRgb(),
+                    android.graphics.PorterDuff.Mode.MULTIPLY);
         }
 
-        if (providerPhotoUrl != null) {
-            getImageColorPalette(providerPhotoUrl);
-        }else {
-            getUserRecord(providerId).addOnCompleteListener(task -> {
-                if (!task.isSuccessful()) {
-                    Exception e = task.getException();
-                    if (e instanceof FirebaseFunctionsException) {
-                        FirebaseFunctionsException ffe = (FirebaseFunctionsException) e;
-                        FirebaseFunctionsException.Code code = ffe.getCode();
-                        Object details = ffe.getDetails();
-                        Toast.makeText(activity, "Error: " + String.valueOf(details), Toast.LENGTH_SHORT).show();
+        if (providerId != null) {
+            ManongActivity.providerRef.child(providerId).addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.hasChild("my_profile")) {
+                        profileRef = dataSnapshot.getRef().child("my_profile");
+                        setUpRecylerView();
+                        dataSnapshot.getRef().removeEventListener(this);
+                    }else {
+                        Log.e("TAKKI", "WALA");
+                        progressBar.setVisibility(View.GONE);
                     }
-                    return;
                 }
 
-                String photoURL = (String) task.getResult().get("photoURL");
-                if (photoURL != null) {
-                    if (photoURL.startsWith("https://graph.facebook.com")) {
-                        photoURL = photoURL.concat("?height=130");
-                    }
-                    getImageColorPalette(photoURL);
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
                 }
             });
         }
 
-        bookButton.setOnClickListener(view1 -> savedBooked());
+        ProviderProfile providerProfile = (ProviderProfile) getArguments().getSerializable("providerProfile");
+
+//        bookButton.setOnClickListener(view1 -> savedBooked());
 
         return view;
+    }
+
+    private void setUpRecylerView() {
+
+        SnapshotParser<About> aboutParser = snapshot -> new About(snapshot.getKey(), snapshot.getValue(String.class));
+
+        FirebaseRecyclerOptions<About> options = new FirebaseRecyclerOptions.Builder<About>()
+                .setQuery(profileRef, aboutParser).build();
+
+        firebaseAdapter = new FirebaseRecyclerAdapter<About, AboutViewHolder>(options) {
+
+            @NonNull
+            @Override
+            public AboutViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+                View view = LayoutInflater.from(context).inflate(R.layout.list_item_about, viewGroup, false);
+                return new AboutViewHolder(view);
+            }
+
+            @Override
+            protected void onBindViewHolder(@NonNull AboutViewHolder holder, int position, @NonNull About about) {
+                holder.title.setText(about.title);
+                if (ProviderProfileActivity.sakuChan != null) {
+                    holder.title.setTextColor(ColorStateList.valueOf(ProviderProfileActivity.sakuChan.getRgb()));
+                }
+            }
+
+            @Override
+            public int getItemCount() {
+                return super.getItemCount() + 1;
+            }
+
+            @Override
+            public void onDataChanged() {
+                super.onDataChanged();
+                progressBar.setVisibility(View.GONE);
+            }
+        };
+
+        recyclerView.setAdapter(firebaseAdapter);
+        firebaseAdapter.startListening();
+
     }
 
     private void addView(String text, String title, LinearLayout.LayoutParams titleParams, LinearLayout.LayoutParams textParams, LinearLayout.LayoutParams viewParams) {
@@ -144,9 +210,9 @@ public class AboutFragment extends Fragment {
         textView.setTextAppearance(context, R.style.ProfileTextAppearance);
         textView.setLayoutParams(titleParams);
 
-        linearContainer.addView(view);
-        linearContainer.addView(textTitle);
-        linearContainer.addView(textView);
+//        linearContainer.addView(view);
+//        linearContainer.addView(textTitle);
+//        linearContainer.addView(textView);
 
     }
 
@@ -188,75 +254,62 @@ public class AboutFragment extends Fragment {
     }
 
     private void changeButtonDesign(int tintColor, int textColor, int rippleColor) {
-        bookButton.setBackgroundTintList(ColorStateList.valueOf(tintColor));
-        bookButton.setTextColor(ColorStateList.valueOf(textColor));
-        bookButton.setRippleColor(ColorStateList.valueOf(rippleColor));
-    }
-
-    private void getImageColorPalette(String url) {
-
-        Glide.with(activity.getApplicationContext())
-                .asBitmap()
-                .load(url)
-                .into(new SimpleTarget<Bitmap>() {
-                    @Override
-                    public void onResourceReady(@NonNull Bitmap bitmap, @Nullable Transition<? super Bitmap> transition) {
-                        Palette.from(bitmap)
-                                .generate(palette -> {
-                                    Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
-
-                                    if (vibrantSwatch == null) {
-                                        vibrantSwatch = palette.getMutedSwatch();
-                                        if (vibrantSwatch == null) {
-                                            vibrantSwatch = palette.getLightVibrantSwatch();
-                                            if (vibrantSwatch == null) {
-                                                vibrantSwatch = palette.getLightMutedSwatch();
-                                            }
-                                        }
-                                    }
-
-                                    if (vibrantSwatch == null) {
-                                        loadingContainer.setVisibility(RelativeLayout.GONE);
-                                        linearContainer.setVisibility(LinearLayout.VISIBLE);
-                                        return;
-                                    }
-
-                                    changeButtonDesign(vibrantSwatch.getRgb(), vibrantSwatch.getBodyTextColor(), vibrantSwatch.getTitleTextColor());
-
-                                    if (textViews != null && textViews.size() > 0) {
-                                        for (TextView textView : textViews) {
-                                            textView.setTextColor(ColorStateList.valueOf(vibrantSwatch.getRgb()));
-                                        }
-                                    }
-
-                                    loadingContainer.setVisibility(RelativeLayout.GONE);
-                                    linearContainer.setVisibility(LinearLayout.VISIBLE);
-
-                                });
-                    }
-                });
+//        bookButton.setBackgroundTintList(ColorStateList.valueOf(tintColor));
+//        bookButton.setTextColor(ColorStateList.valueOf(textColor));
+//        bookButton.setRippleColor(ColorStateList.valueOf(rippleColor));
     }
 
     private void savedBooked() {
         if (requestKey != null && serviceKey != null) {
-            requestRef.child(requestKey).child("bookedService").setValue(serviceKey)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(activity, "You have booked this vendor.", Toast.LENGTH_LONG).show();
-                        }
-                    });
+            // Checking if it's cancelled
+            ManongActivity.requestRef.child(requestKey).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.hasChild("isCancelled") && dataSnapshot.child("isCancelled").getValue(Boolean.class) != null) {
+                        Toast.makeText(activity, "Sorry but you've already cancelled this request.", Toast.LENGTH_LONG).show();
+                    }else {
+                        HashMap<String, String> booked = new HashMap<>();
+                        booked.put("bookedService", serviceKey);
+                        booked.put("bookedProvider", providerId);
+                        ManongActivity.requestRef.child(requestKey).child("booked").setValue(booked)
+                                .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        Toast.makeText(activity, "You have booked this vendor.", Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
         }
     }
 
-    private Task<Map<String, Object>> getUserRecord(String uid) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("uid", uid);
-        return mFunctions.getHttpsCallable("getUserRecord").call(data)
-                .continueWith(task -> {
-                    Map<String, Object> result = (Map<String, Object>) task.getResult().getData();
-                    return result;
-                });
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (firebaseAdapter != null) {
+            firebaseAdapter.stopListening();
+        }
+    }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (firebaseAdapter != null) {
+            firebaseAdapter.startListening();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (firebaseAdapter != null) {
+            firebaseAdapter.startListening();
+        }
     }
 
 }

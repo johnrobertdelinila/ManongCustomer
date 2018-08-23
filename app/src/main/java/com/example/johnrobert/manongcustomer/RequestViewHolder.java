@@ -8,7 +8,8 @@ import android.widget.TextView;
 
 public class RequestViewHolder extends RecyclerView.ViewHolder{
 
-    TextView serviceName, quotes, date, booked;
+    TextView serviceName, quotes, date, booked, compare_cancelled;
+    MaterialCardView container_text;
 
     public RequestViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -16,6 +17,8 @@ public class RequestViewHolder extends RecyclerView.ViewHolder{
         quotes = itemView.findViewById(R.id.text_service_quotes);
         date = itemView.findViewById(R.id.text_service_date);
         booked = itemView.findViewById(R.id.text_booked_service);
+        compare_cancelled = itemView.findViewById(R.id.text_cancelled_compare);
+        container_text = itemView.findViewById(R.id.card_cancelled_compare);
     }
 
 }

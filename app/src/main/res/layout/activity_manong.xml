@@ -26,7 +26,7 @@
         android:layout_height="wrap_content">
 
         <android.support.v7.widget.Toolbar
-            app:navigationIcon="@drawable/shr_branded_menu"
+            app:navigationIcon="@drawable/manong_logo_nav"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             style="@style/Widget.Manong.Toolbar"
             android:id="@+id/toolbar"

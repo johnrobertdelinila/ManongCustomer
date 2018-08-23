@@ -1,18 +1,16 @@
 package com.example.johnrobert.manongcustomer;
 
-import android.app.Dialog;
-import android.content.ContextWrapper;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.button.MaterialButton;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -25,21 +23,12 @@ import android.view.Window;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alimuzaffar.lib.pin.PinEntryEditText;
 import com.bumptech.glide.Glide;
-import com.facebook.AccessToken;
-import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.login.LoginResult;
-import com.facebook.login.widget.LoginButton;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
-import com.firebase.ui.auth.data.model.User;
-import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -50,8 +39,6 @@ import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
-import com.google.firebase.auth.FacebookAuthCredential;
-import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
@@ -61,22 +48,14 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.auth.SignInMethodQueryResult;
-import com.google.firebase.auth.TwitterAuthCredential;
-import com.google.firebase.auth.TwitterAuthProvider;
 import com.google.firebase.auth.UserInfo;
 import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.database.ServerValue;
-import com.google.firebase.functions.FirebaseFunctions;
-import com.google.firebase.functions.FirebaseFunctionsException;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -96,8 +75,7 @@ public class ProfileActivity extends AppCompatActivity {
     private CircleImageView userPhotoUrl;
     private MaterialButton updateButton, changePassButton;
 
-    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    private FirebaseUser user =  mAuth.getCurrentUser();
+    private FirebaseUser user = ManongActivity.mUser;
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
     private PhoneAuthProvider.ForceResendingToken mResendToken;
     private String mVerificationId;
@@ -131,6 +109,8 @@ public class ProfileActivity extends AppCompatActivity {
         setUpToolbar();
         init();
 
+        editDisplayName.setBackgroundColor(Color.TRANSPARENT);
+
         if (user != null) {
 
             displayName = user.getDisplayName();
@@ -147,7 +127,7 @@ public class ProfileActivity extends AppCompatActivity {
             for (UserInfo profile : user.getProviderData()) {
                 //password, google.com, facebook.com, twitter.com
                 providerId = profile.getProviderId();
-                if (profile.getEmail() != null) {
+                if (profile.getEmail() != null && test == 1) {
                     originalProviderEmail = profile.getEmail();
                 }
                 if (profile.getPhoneNumber() != null && !profile.getPhoneNumber().trim().equalsIgnoreCase("") && !profile.getPhoneNumber().trim().equalsIgnoreCase("null")
@@ -156,6 +136,8 @@ public class ProfileActivity extends AppCompatActivity {
                 }
                 test++;
             }
+
+            Log.e("ORIGINAL EMAIL", originalProviderEmail);
 
             if (providerId.equalsIgnoreCase("password")) {
                 changePassButton.setVisibility(MaterialButton.VISIBLE);
@@ -191,6 +173,26 @@ public class ProfileActivity extends AppCompatActivity {
         });
 
         changePassButton.setOnClickListener(view -> showChangePassDialog());
+
+        findViewById(R.id.btn_logout).setOnClickListener(view1 -> {
+            android.app.AlertDialog.Builder dialog = new android.app.AlertDialog.Builder(ProfileActivity.this);
+            dialog.setTitle("Logout");
+            dialog.setMessage("Are you sure, you want to logout?");
+            dialog.setPositiveButton("YES", (dialogInterface, i) -> AuthUI.getInstance()
+                    .signOut(ProfileActivity.this)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
+                            finish();
+                            startActivity(intent);
+                        }
+                    }));
+            dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
+
+            android.app.AlertDialog dialogg = dialog.create();
+            dialogg.show();
+
+        });
 
     }
 
@@ -373,7 +375,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void checkEmailIfExist() {
         if (!updateEmail.equals(email)) {
-            mAuth.fetchSignInMethodsForEmail(updateEmail)
+            MainActivity.mAuth.fetchSignInMethodsForEmail(updateEmail)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             SignInMethodQueryResult providers = task.getResult();
@@ -491,7 +493,7 @@ public class ProfileActivity extends AppCompatActivity {
         editVerificationCode.setOnPinEnteredListener(str -> verifyPhoneNumberWithCode(str.toString()));
         AlertDialog outDialog = dialog.create();
         outDialog.show();
-        outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorControlActivated));
+        outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorPrimaryDark));
         outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTypeface(Typeface.DEFAULT_BOLD);
     }
 
@@ -526,6 +528,7 @@ public class ProfileActivity extends AppCompatActivity {
             displayName = user.getDisplayName();
             photoURL = String.valueOf(user.getPhotoUrl());
         }
+        MoreFragment.isUpdated = true;
     }
 
     @Override
@@ -738,17 +741,17 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void updateProfileLoading() {
         disableEditText();
-        updateButton.setText("LOADING...");
+        updateButton.setText(R.string.text_button_saving);
         updateButton.setEnabled(false);
     }
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent();
-        String updatedDisplayName = editDisplayName.getText().toString();
-        intent.putExtra("displayName", updatedDisplayName);
-        intent.putExtra("photoURL", updatedPhotoURL);
-        setResult(REQUEST_CODE, intent);
+//        Intent intent = new Intent();
+//        String updatedDisplayName = editDisplayName.getText().toString();
+//        intent.putExtra("displayName", updatedDisplayName);
+//        intent.putExtra("photoURL", updatedPhotoURL);
+//        setResult(REQUEST_CODE, intent);
         finish();
     }
 
@@ -770,14 +773,14 @@ public class ProfileActivity extends AppCompatActivity {
         dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
         AlertDialog outDialog = dialog.create();
         outDialog.show();
-        outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorControlActivated));
+        outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorPrimaryDark));
         outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTypeface(Typeface.DEFAULT_BOLD);
-        outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(R.color.colorControlActivated));
+        outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(R.color.colorPrimaryDark));
         outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTypeface(Typeface.DEFAULT_BOLD);
     }
 
     private void getUserEmailProvider(String email) {
-        mAuth.fetchSignInMethodsForEmail(email)
+        MainActivity.mAuth.fetchSignInMethodsForEmail(email)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         SignInMethodQueryResult providers = task.getResult();
@@ -808,13 +811,16 @@ public class ProfileActivity extends AppCompatActivity {
             StorageReference userStorageReference = FirebaseStorage.getInstance().getReference()
                     .child("User profile picture").child(user.getUid());
             putImageInStorage(userStorageReference, uri);
-
+            MoreFragment.isUpdated = true;
         });
         AlertDialog outDialog = dialog.create();
+        if(ProfileActivity.this.isFinishing()) {
+            return;
+        }
         outDialog.show();
-        outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorControlActivated));
+        outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorPrimaryDark));
         outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTypeface(Typeface.DEFAULT_BOLD);
-        outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(R.color.colorControlActivated));
+        outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(R.color.colorPrimaryDark));
         outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTypeface(Typeface.DEFAULT_BOLD);
     }
 
@@ -887,6 +893,5 @@ public class ProfileActivity extends AppCompatActivity {
                     }
                 });
     }
-
 
 }

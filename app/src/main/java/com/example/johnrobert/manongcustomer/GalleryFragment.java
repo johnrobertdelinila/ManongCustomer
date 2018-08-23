@@ -2,7 +2,9 @@ package com.example.johnrobert.manongcustomer;
 
 
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -15,8 +17,10 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.graphics.Palette;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,8 +33,10 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
@@ -61,15 +67,11 @@ public class GalleryFragment extends Fragment {
     private String providerId;
     private String providerPhotoUrl;
 
-    private FirebaseFunctions mFunctions = FirebaseFunctions.getInstance();
-    private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
-    private DatabaseReference rootRef = mDatabase.getReference();
-    private DatabaseReference providerRef = rootRef.child("Providers");
     private DatabaseReference photosRef;
+    private FirebaseRecyclerAdapter firebaseAdapter;
 
     private RecyclerView recyclerView;
     private GridLayoutManager gridLayoutManager;
-    private FirebaseRecyclerAdapter firebaseAdapter;
     private ProgressBar progressBar;
 
 
@@ -132,16 +134,15 @@ public class GalleryFragment extends Fragment {
         recyclerView.setLayoutManager(gridLayoutManager);
         progressBar = view.findViewById(R.id.progress_bar);
 
-        if (providerPhotoUrl != null) {
-            setProgressbarColor(providerPhotoUrl);
-        }else {
-            setUpProgressBar();
+        if (ProviderProfileActivity.sakuChan != null) {
+            progressBar.getIndeterminateDrawable().setColorFilter(ProviderProfileActivity.sakuChan.getRgb(),
+                    android.graphics.PorterDuff.Mode.MULTIPLY);
         }
 
         if (providerId != null) {
-            photosRef = providerRef.child(providerId).child("photos");
+            photosRef = ManongActivity.providerRef.child(providerId).child("photos");
 
-            DatabaseReference checkRef = providerRef.child(providerId);
+            DatabaseReference checkRef = ManongActivity.providerRef.child(providerId);
             // Checking if the user have photos
             checkRef.addValueEventListener(new ValueEventListener() {
                 @Override
@@ -149,7 +150,7 @@ public class GalleryFragment extends Fragment {
                     if (dataSnapshot.hasChild("photos")) {
                         setupFirebaseRecyclerView(photosRef);
 
-                        view.findViewById(R.id.loading_container).setVisibility(RelativeLayout.GONE);
+                        view.findViewById(R.id.progress_bar).setVisibility(RelativeLayout.GONE);
                         recyclerView.setVisibility(RecyclerView.VISIBLE);
                         checkRef.removeEventListener(this);
                     }
@@ -164,31 +165,6 @@ public class GalleryFragment extends Fragment {
         }
 
         return view;
-    }
-
-    private void setUpProgressBar() {
-        getUserRecord(providerId).addOnCompleteListener(task -> {
-            if (!task.isSuccessful()) {
-                Exception e = task.getException();
-                if (e instanceof FirebaseFunctionsException) {
-                    FirebaseFunctionsException ffe = (FirebaseFunctionsException) e;
-                    FirebaseFunctionsException.Code code = ffe.getCode();
-                    Object details = ffe.getDetails();
-                    Toast.makeText(activity, "Error: " + String.valueOf(details), Toast.LENGTH_SHORT).show();
-                }
-                return;
-            }
-
-            String photoURL = (String) task.getResult().get("photoURL");
-
-
-            if (photoURL != null) {
-                if (photoURL.startsWith("https://graph.facebook.com")) {
-                    photoURL = photoURL.concat("?height=130");
-                }
-                setProgressbarColor(photoURL);
-            }
-        });
     }
 
     private void setupFirebaseRecyclerView(DatabaseReference photosRef) {
@@ -215,9 +191,10 @@ public class GalleryFragment extends Fragment {
             @Override
             protected void onBindViewHolder(@NonNull PhotoViewHolder holder, int position, @NonNull Photos photo) {
                 holder.temp_image.resetLoader();
-                holder.itemView.setOnClickListener(view -> showFullScreenImage(photo.getUrl()));
+                holder.itemView.setOnClickListener(view -> showFullScreenImage(photo.getUrl(), view));
                 Glide.with(activity.getApplicationContext())
                         .load(photo.url)
+                        .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
                         .listener(new RequestListener<Drawable>() {
                             @Override
                             public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
@@ -227,23 +204,7 @@ public class GalleryFragment extends Fragment {
                             @Override
                             public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
                                 holder.temp_image.setVisibility(LoaderImageView.INVISIBLE);
-
-                                firebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-                                    @Override
-                                    public void onItemRangeInserted(int positionStart, int itemCount) {
-                                        super.onItemRangeInserted(positionStart, itemCount);
-//                                        int friendlyMessageCount = firebaseAdapter.getItemCount();
-//                                        int lastVisiblePosition = gridLayoutManager.findLastCompletelyVisibleItemPosition();
-//                                        // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
-//                                        // to the bottom of the list to show the newly added message.
-//                                        if (lastVisiblePosition == -1 ||
-//                                                (positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
-//                                            recyclerView.scrollToPosition(positionStart);
-//                                        }
-                                        recyclerView.scrollToPosition(positionStart);
-                                    }
-                                });
-
+                                holder.image.setImageDrawable(resource);
                                 return false;
                             }
                         })
@@ -283,23 +244,18 @@ public class GalleryFragment extends Fragment {
 
     }
 
-    private void showFullScreenImage(String url) {
-        android.app.AlertDialog.Builder dialog = new android.app.AlertDialog.Builder(activity);
-        View view = getLayoutInflater().inflate(R.layout.layout_photo_dialog, null);
-        ImageView imageView = view.findViewById(R.id.image);
-        Glide.with(activity.getApplicationContext()).load(url).into(imageView);
-        dialog.setView(view);
-        dialog.setPositiveButton("CLOSE", (dialogInterface, i) -> {});
+    private void showFullScreenImage(String url, View view) {
 
-        android.app.AlertDialog dialogg = dialog.create();
-        dialogg.show();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (firebaseAdapter != null) {
-            firebaseAdapter.stopListening();
+        Intent intent = new Intent(activity, FullScreenImageActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(FullScreenImageActivity.IMAGE_URL_KEY, url);
+        intent.putExtras(bundle);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            startActivity(intent);
+        } else {
+            ActivityOptions options = ActivityOptions
+                    .makeSceneTransitionAnimation(activity, view, "shared");
+            activity.startActivity(intent, options.toBundle());
         }
     }
 
@@ -325,44 +281,6 @@ public class GalleryFragment extends Fragment {
         if (firebaseAdapter != null) {
             firebaseAdapter.startListening();
         }
-    }
-
-    private void setProgressbarColor(String url) {
-
-        Glide.with(activity.getApplicationContext())
-                .asBitmap()
-                .load(url)
-                .into(new SimpleTarget<Bitmap>() {
-                    @Override
-                    public void onResourceReady(@NonNull Bitmap bitmap, @Nullable Transition<? super Bitmap> transition) {
-                        Palette.from(bitmap)
-                                .generate(palette -> {
-                                    Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
-
-                                    if (vibrantSwatch == null) {
-                                        vibrantSwatch = palette.getMutedSwatch();
-                                    }
-
-                                    if (vibrantSwatch == null) {
-                                        return;
-                                    }
-                                    progressBar.getIndeterminateDrawable().setColorFilter(vibrantSwatch.getRgb(),
-                                            android.graphics.PorterDuff.Mode.MULTIPLY);
-
-                                });
-                    }
-                });
-    }
-
-    private Task<Map<String, Object>> getUserRecord(String uid) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("uid", uid);
-        return mFunctions.getHttpsCallable("getUserRecord").call(data)
-                .continueWith(task -> {
-                    Map<String, Object> result = (Map<String, Object>) task.getResult().getData();
-                    return result;
-                });
-
     }
 
 }

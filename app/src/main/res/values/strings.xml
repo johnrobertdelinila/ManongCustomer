@@ -20,17 +20,21 @@
     <string name="manong_request_detail_title">Request Detail</string>
     <string name="manong_header_request">Request History</string>
     <string name="manong_text_waiting">We are waiting for quotes from vendors\nWe will notify you as soon as we receive\nquotes from your request.</string>
-    <string name="manong_step_1">1.  Submit a request now.</string>
-    <string name="manong_step_2">2.  Get up to a 5 quotes from professional and verified vendors.</string>
-    <string name="manong_step_3">3.  Hire your preferred vendor.</string>
-    <string name="manong_step_5">4.  Pay the vendor directly when the job is done.</string>
-    <string name="banner_ad_unit_id" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="manong_step_1">Submit a request now.</string>
+    <string name="manong_step_2">Get up to a 5 quotes from professional and verified vendors.</string>
+    <string name="manong_step_3">Hire your preferred vendor.</string>
+    <string name="manong_step_5">Pay the vendor directly when the job is done.</string>
     <string name="manong_hint_message">Message</string>
     <string name="manong_text_send">SEND</string>
     <string name="manong_message_hint">Type here</string>
     <string name="manong_header_message">Message</string>
     <string name="manong_register_title">Register</string>
     <string name="web_client_id">1094111490534-p2d6t4ma8bbg10is49fgupqdneqlepem.apps.googleusercontent.com</string>
+
+    <string name="banner_app_unit_id" translatable="false">ca-app-pub-7303190061353762~2162966785</string>
+    <!--<string name="banner_ad_unit_id" translatable="false">ca-app-pub-7303190061353762/5527496723</string>-->
+
+    <string name="banner_ad_unit_id" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
 
     <!-- Manong backdrop menu labels -->
     <string name="manong_search_label">Services</string>
@@ -68,7 +72,6 @@
     <string name="duration_easing_acceleration_curve">Acceleration curve</string>
     <string name="duration_easing_sharp_curve">Sharp curve</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="manong_error_email_register">Email must not be empty.</string>
     <string name="manong_error_fullname">Full Name must not be empty.</string>
@@ -79,9 +82,21 @@
     <string name="manong_view_profile">View and edit account</string>
     <string name="manong_text_info">Info</string>
     <string name="manong_header_service">Services For You</string>
-    <string name="manong_button_loading">CHECKING EMAIL…</string>
+    <string name="manong_button_loading">CHECKING…</string>
     <string name="manong_image_loading">Please wait…</string>
     <string name="manong_text_compare">Compare</string>
     <string name="manong_please_wait">Please wait…</string>
+
+    <!-- Vertical Stepper Form Layout String Override -->
+    <string name="vertical_form_stepper_form_continue">NEXT</string>
+    <string name="vertical_form_stepper_form_confirm_button">CONFIRM DATA</string>
+    <string name="vertical_form_stepper_form_last_step">Summary</string>
+
+    <string name="text_button_saving">SAVING…</string>
+
+    <!-- PUSH NOTIFICATION -->
+    <string name="manong_quotations">New Quotations</string>
+    <string name="manong_messages">New Messages</string>
+    <string name="manong_jobs">New Completed Jobs</string>
 
 </resources>

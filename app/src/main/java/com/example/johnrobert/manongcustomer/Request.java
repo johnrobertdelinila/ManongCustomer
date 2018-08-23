@@ -6,14 +6,17 @@ import java.util.HashMap;
 @SuppressWarnings("serial")
 public class Request implements Serializable {
 
-    private HashMap<String, String> questionsAndAnswers, images, quotes;
+    private HashMap<String, String> questionsAndAnswers, images, quotes, booked;
     private HashMap<String, Double> location_latlng;
-    private String serviceName, userId, key, bookedService, locationName;
+    private String serviceName, userId, key, locationName, cancellationReason;
     private Object timestamp;
+    private Boolean isCancelled;
 
     public Request() { }
 
-    public Request(HashMap<String, String> questionsAndAnswers, HashMap<String, String> images, HashMap<String, Double> location_latlng, String serviceName, String userId, HashMap<String, String> quotes, Object timestamp, String bookedService, String locationName) {
+    public Request(HashMap<String, String> questionsAndAnswers, HashMap<String, String> images, HashMap<String, Double> location_latlng, String serviceName,
+                   String userId, HashMap<String, String> quotes, Object timestamp, String locationName,
+                   Boolean isCancelled, String cancellationReason, HashMap<String, String> booked) {
         this.questionsAndAnswers = questionsAndAnswers;
         this.images = images;
         this.location_latlng = location_latlng;
@@ -21,8 +24,34 @@ public class Request implements Serializable {
         this.userId = userId;
         this.quotes = quotes;
         this.timestamp = timestamp;
-        this.bookedService = bookedService;
         this.locationName = locationName;
+        this.isCancelled = isCancelled;
+        this.cancellationReason = cancellationReason;
+        this.booked = booked;
+    }
+
+    public HashMap<String, String> getBooked() {
+        return booked;
+    }
+
+    public void setBooked(HashMap<String, String> booked) {
+        this.booked = booked;
+    }
+
+    public String getCancellationReason() {
+        return cancellationReason;
+    }
+
+    public void setCancellationReason(String cancellationReason) {
+        this.cancellationReason = cancellationReason;
+    }
+
+    public Boolean getCancelled() {
+        return isCancelled;
+    }
+
+    public void setCancelled(Boolean cancelled) {
+        isCancelled = cancelled;
     }
 
     public String getLocationName() {
@@ -31,14 +60,6 @@ public class Request implements Serializable {
 
     public void setLocationName(String locationName) {
         this.locationName = locationName;
-    }
-
-    public String getBookedService() {
-        return bookedService;
-    }
-
-    public void setBookedService(String bookedService) {
-        this.bookedService = bookedService;
     }
 
     public Object getTimestamp() {

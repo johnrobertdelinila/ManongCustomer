@@ -95,11 +95,21 @@
             android:layout_marginBottom="20dp"
             android:background="@android:drawable/divider_horizontal_bright" />
 
+        <TextView
+            android:text="Push Notifications"
+            android:layout_marginBottom="10dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
+            android:fontFamily="@font/rubik_medium"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
         <Switch
             android:id="@+id/switch_quotation"
             android:layout_marginBottom="10dp"
             style="@style/SettingsTextAppearance"
-            android:text="New Quotations"
+            android:text="@string/manong_quotations"
             android:gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
@@ -108,7 +118,7 @@
             android:id="@+id/switch_messages"
             android:layout_marginBottom="10dp"
             style="@style/SettingsTextAppearance"
-            android:text="New Messages"
+            android:text="@string/manong_messages"
             android:gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
@@ -117,7 +127,7 @@
             android:id="@+id/switch_completed_jobs"
             android:layout_marginBottom="10dp"
             style="@style/SettingsTextAppearance"
-            android:text="New Completed Jobs"
+            android:text="@string/manong_jobs"
             android:gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
@@ -127,8 +137,18 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="20dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="10dp"
             android:background="@android:drawable/divider_horizontal_bright" />
+
+        <TextView
+            android:text="Others"
+            android:layout_marginBottom="10dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
+            android:fontFamily="@font/rubik_medium"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
         <android.support.design.button.MaterialButton
             android:id="@+id/btn_developers"
@@ -157,8 +177,9 @@
             android:background="@android:drawable/divider_horizontal_bright" />
 
         <android.support.design.button.MaterialButton
-            android:id="@+id/btn_logout"
             style="@style/Widget.Manong.Button.TextButton"
+            android:visibility="gone"
+            android:id="@+id/btn_logout"
             android:layout_gravity="center_vertical"
             android:gravity="center_vertical"
             android:text="Logout"

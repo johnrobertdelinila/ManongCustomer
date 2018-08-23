@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
     tools:context=".RequestFragment">
 
     <LinearLayout
@@ -10,25 +12,47 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/manong_header_request"
-            tools:text="Request"
-            style="@style/TextAppearance.Title.Fragment"
+        <RelativeLayout
             android:layout_marginTop="26dp"
-            android:textColor="?android:attr/textColorPrimary"
             android:layout_marginBottom="11dp"
-            android:layout_marginStart="24dp"
-            tools:targetApi="lollipop" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/manong_header_request"
+                tools:text="Request"
+                style="@style/TextAppearance.Title.Fragment"
+                android:textColor="?android:attr/textColorPrimary"
+                android:layout_marginStart="24dp"
+                tools:targetApi="lollipop" />
+
+            <ToggleButton
+                android:id="@+id/filter_button"
+                android:elevation="0dp"
+                android:layout_centerVertical="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginEnd="12dp"
+                android:drawableTop="@drawable/manong_filter_icon"
+                android:gravity="center"
+                android:textOff=""
+                android:textOn=""
+                android:textSize="0sp"
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                tools:targetApi="lollipop" />
+
+        </RelativeLayout>
 
         <android.support.v7.widget.RecyclerView
             android:paddingTop="2dp"
             android:id="@+id/recycler_view"
+            android:scrollbars="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-
 
     </LinearLayout>
 

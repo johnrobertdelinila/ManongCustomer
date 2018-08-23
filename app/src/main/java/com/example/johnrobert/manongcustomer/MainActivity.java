@@ -38,6 +38,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.functions.FirebaseFunctions;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -49,14 +50,17 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int RC_SIGN_IN = 1996;
     private Intent intent, intent_register;
-    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+
+    public static FirebaseAuth mAuth = FirebaseAuth.getInstance();
     private AuthUI authUI = AuthUI.getInstance();
+    private FirebaseUser user = mAuth.getCurrentUser();
+
+    public static FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
+    public static DatabaseReference rootRef = mDatabase.getReference();
+    public static DatabaseReference customerRef = rootRef.child("Customers");
+
     private ProgressBar loginProgress;
     private MaterialButton loginButton;
-    private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
-    private DatabaseReference rootRef = mDatabase.getReference();
-    private DatabaseReference customerRef = rootRef.child("Customers");
-    private FirebaseUser user = mAuth.getCurrentUser();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -236,7 +240,10 @@ public class MainActivity extends AppCompatActivity {
                 // Successfully signed in
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if (user != null) {
+                    Log.e("SOCIAL MEDIA", "SUCCESS");
                     updateCustomerAccount(user.getUid());
+                }else {
+                    Log.e("SOCIAL MEDIA", "NULL");
                 }
                 // ...
             } else {
@@ -246,6 +253,7 @@ public class MainActivity extends AppCompatActivity {
                 // ...
                 if (response != null && response.getError() != null) {
                     Toast.makeText(this, "Error: " + response.getError().getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e("SOCIAL MEDIA", String.valueOf(response.getError()));
                 }
             }
         }

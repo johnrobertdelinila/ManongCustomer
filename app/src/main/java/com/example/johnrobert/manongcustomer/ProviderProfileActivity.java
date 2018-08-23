@@ -7,38 +7,38 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.functions.FirebaseFunctionsException;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -65,50 +65,94 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
     private RelativeLayout temp_layout;
     private MaterialRatingBar providerRating;
 
-    private FirebaseFunctions mFunctions = FirebaseFunctions.getInstance();
-
     private String providerPhoneNumber;
+    private int kulayNgAlertDialogButton = 0;
+    private String providerDisplayName;
+    private String providerId;
+    private String providerPhotoUrl;
+    private Boolean isWithoutTransition;
+    public static Palette.Swatch sakuChan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_provider_profile);
 
-        String providerId = getIntent().getStringExtra("providerId");
-        String providerDisplayName = getIntent().getStringExtra("providerDisplayName");
-        String providerPhotoUrl = getIntent().getStringExtra("providerPhotoUrl");
-        ProviderProfile providerProfile = (ProviderProfile) getIntent().getSerializableExtra("providerProfile");
-        providerPhoneNumber = getIntent().getStringExtra("providerPhoneNumber");
-        String requestKey = getIntent().getStringExtra("requestKey");
-        String serviceKey = getIntent().getStringExtra("serviceKey");
+        providerPhotoUrl = getIntent().getStringExtra("providerPhotoUrl");
+        providerId = getIntent().getStringExtra("providerId");
 
-        fab = findViewById(R.id.fab_call);
-        appBarLayout = findViewById(R.id.appBar);
-        collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
+        if (providerPhotoUrl != null) {
+            configCollapsingLayout(providerPhotoUrl);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isWithoutTransition == null) {
+                postponeEnterTransition();
+            }
+        } else {
+            isWithoutTransition = true;
+            fetchProviderProfile(providerId);
+        }
+
+        providerDisplayName = getIntent().getStringExtra("providerDisplayName");
+
         providerImageView = findViewById(R.id.providerImage);
+        fab = findViewById(R.id.fab_call);
+        collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
+        tabLayout = findViewById(R.id.tabs);
+        appBarLayout = findViewById(R.id.appBar);
         temp_layout = findViewById(R.id.loading_container);
         providerRating = findViewById(R.id.service_provider_ratingbar);
 
         setupToolbar();
 
-        if (providerDisplayName != null && providerPhoneNumber != null) {
-            // Set title
-            ProviderProfileActivity.this.setTitle(providerDisplayName);
-        } else {
-            fetchProviderProfile(providerId);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().getSharedElementEnterTransition().addListener(new android.transition.Transition.TransitionListener() {
+                @Override
+                public void onTransitionStart(android.transition.Transition transition) {
+                }
+
+                @Override
+                public void onTransitionEnd(android.transition.Transition transition) {
+                    setUpAfterEnterTask();
+                    Log.e("TRANSITION", "END");
+                }
+
+                @Override
+                public void onTransitionCancel(android.transition.Transition transition) {
+
+                }
+
+                @Override
+                public void onTransitionPause(android.transition.Transition transition) {
+
+                }
+
+                @Override
+                public void onTransitionResume(android.transition.Transition transition) {
+
+                }
+            });
         }
 
-        if (providerPhotoUrl != null) {
-            configCollapsingLayout(providerPhotoUrl);
-        } else {
-            fetchProviderProfile(providerId);
+    }
+
+
+    private void setUpAfterEnterTask() {
+
+        if (providerDisplayName != null) {
+            toolbar.setTitle(providerDisplayName);
         }
+
+        ProviderProfile providerProfile = (ProviderProfile) getIntent().getSerializableExtra("providerProfile");
+        providerPhoneNumber = getIntent().getStringExtra("providerPhoneNumber");
+        String requestKey = getIntent().getStringExtra("requestKey");
+        String serviceKey = getIntent().getStringExtra("serviceKey");
+
+//        if (providerPhotoUrl == null && providerPhoneNumber == null) {
+//            fetchProviderProfile(providerId);
+//        }
 
         Bundle bundle = new Bundle();
         bundle.putString("providerId", providerId);
-        if (providerPhotoUrl != null) {
-            bundle.putString("providerPhotoUrl", providerPhotoUrl);
-        }
+        bundle.putString("providerPhotoUrl", providerPhotoUrl);
 
         GalleryFragment galleryFragment = new GalleryFragment();
         galleryFragment.setArguments(bundle);
@@ -125,11 +169,9 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
         mViewPagerAdapter.addFragment(galleryFragment, "Gallery");
         mViewPager.setAdapter(mViewPagerAdapter);
 
-        tabLayout = findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
 
         appBarLayout.addOnOffsetChangedListener(this);
-
         fab.setOnClickListener(view -> {
             if (providerPhoneNumber != null) {
                 // make a phone call
@@ -145,6 +187,12 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
                 Toast.makeText(this, "Service Provider doesn't have Phone Number.", Toast.LENGTH_LONG).show();
             }
         });
+
+        new Handler().postDelayed(() -> fab.show(), 810);
+
+//        findViewById(R.id.content_dynamic_durations).setVisibility(View.VISIBLE);
+
+        mViewPager.setVisibility(View.VISIBLE);
 
     }
 
@@ -173,7 +221,16 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
                 Toast.makeText(this, "Please allow the permission in settings to make a phone call.", Toast.LENGTH_LONG).show();
                 return;
             }
-            startActivity(intent);
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this, R.style.ManongDialogTheme);
+            dialog.setMessage("Call " + providerPhoneNumber + "?");
+            dialog.setPositiveButton("CALL", (dialogInterface, i) -> startActivity(intent));
+            dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
+            AlertDialog outDialog = dialog.create();
+            outDialog.show();
+            outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(kulayNgAlertDialogButton);
+            outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTypeface(Typeface.DEFAULT_BOLD);
+            outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(kulayNgAlertDialogButton);
+            outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTypeface(Typeface.DEFAULT_BOLD);
         }else {
             Toast.makeText(this, "Service Provider doesn't have Phone Number.", Toast.LENGTH_LONG).show();
         }
@@ -193,13 +250,14 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
             }
             String displayName = (String) task.getResult().get("displayName");
             String photoURL = (String) task.getResult().get("photoURL");
+            providerPhotoUrl = photoURL;
             providerPhoneNumber = (String) task.getResult().get("phoneNumber");
 
             if (displayName != null) {
                 // Set title
-                ProviderProfileActivity.this.setTitle(displayName);
+                toolbar.setTitle(displayName);
             }else {
-                ProviderProfileActivity.this.setTitle("Service Provider");
+                toolbar.setTitle("Service Provider");
             }
 
             if (photoURL != null) {
@@ -212,22 +270,22 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
                     temp_layout.setElevation(0);
                 }
                 temp_layout.setVisibility(RelativeLayout.GONE);
+                providerImageView.setImageDrawable(getResources().getDrawable(R.drawable.manong_customer_logo));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isWithoutTransition == null) {
+                    startPostponedEnterTransition();
+                }else {
+                    setUpAfterEnterTask();
+                }
             }
 
         });
-    }
-
-    @Override
-    public void onEnterAnimationComplete() {
-        super.onEnterAnimationComplete();
-
-//        configCollapsingLayout(sakurako5);
     }
 
     private void configCollapsingLayout(String photoUrl) {
 
         Glide.with(getApplicationContext())
                 .asBitmap()
+                .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
                 .load(photoUrl)
                 .into(new SimpleTarget<Bitmap>() {
                     @Override
@@ -285,16 +343,24 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
                                         }
                                     }
 
-                                    if (vibrantSwatch == null && mutedLightSwatch == null) {
+                                    if (vibrantSwatch == null || mutedLightSwatch == null) {
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                             temp_layout.setElevation(0);
                                         }
                                         temp_layout.setVisibility(RelativeLayout.GONE);
+
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isWithoutTransition == null) {
+                                            startPostponedEnterTransition();
+                                        }else {
+                                            setUpAfterEnterTask();
+                                        }
+
                                         return;
                                     }
 
                                     collapsingToolbarLayout.setBackgroundColor(vibrantLightSwatch.getRgb());
                                     collapsingToolbarLayout.setContentScrimColor(vibrantLightSwatch.getRgb());
+                                    kulayNgAlertDialogButton = vibrantSwatch.getRgb();
                                     if (Build.VERSION.SDK_INT >= 21) {
                                         getWindow().setStatusBarColor(vibrantSwatch.getRgb()); //status bar or the time bar at the top
                                     }
@@ -303,11 +369,10 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
                                     appBarLayout.setBackgroundColor(vibrantLightSwatch.getRgb());
                                     tabLayout.setTabRippleColor(ColorStateList.valueOf(vibrantSwatch.getRgb()));
                                     tabLayout.setSelectedTabIndicatorColor(vibrantLightSwatch.getBodyTextColor());
-                                    tabLayout.setTabTextColors(vibrantLightSwatch.getTitleTextColor(), vibrantLightSwatch.getBodyTextColor());
+                                    tabLayout.setTabTextColors(vibrantLightSwatch.getBodyTextColor(), vibrantLightSwatch.getTitleTextColor());
 
                                     toolbar.setTitleTextColor(vibrantLightSwatch.getBodyTextColor());
-                                    Drawable backArrow = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_twotone_arrow_back_24px);
-//                                    backArrow.setColorFilter(vibrantLightSwatch.getBodyTextColor(), PorterDuff.Mode.SRC_ATOP);
+                                    Drawable backArrow = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_arrow_back_black_24dp);
                                     backArrow.setColorFilter(new PorterDuffColorFilter(vibrantLightSwatch.getBodyTextColor(), PorterDuff.Mode.MULTIPLY));
                                     toolbar.setNavigationIcon(backArrow);
                                     toolbar.setNavigationOnClickListener(view -> onBackPressed());
@@ -336,9 +401,30 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
                                         temp_layout.setElevation(0);
                                     }
                                     temp_layout.setVisibility(RelativeLayout.GONE);
+                                    providerImageView.setImageBitmap(bitmap);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isWithoutTransition == null) {
+                                        startPostponedEnterTransition();
+                                    }else {
+                                        setUpAfterEnterTask();
+                                    }
+
+                                    Palette.Swatch nakitaikurai = palette.getVibrantSwatch();
+
+                                    if (nakitaikurai == null) {
+                                        nakitaikurai = palette.getMutedSwatch();
+                                        if (nakitaikurai == null) {
+                                            nakitaikurai = palette.getLightVibrantSwatch();
+                                            if (nakitaikurai == null) {
+                                                nakitaikurai = palette.getLightMutedSwatch();
+                                            }
+                                        }
+                                    }
+
+                                    if (nakitaikurai != null) {
+                                        sakuChan = nakitaikurai;
+                                    }
 
                                 });
-                        providerImageView.setImageBitmap(bitmap);
                     }
                 });
 
@@ -347,19 +433,15 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
     private void setupToolbar() {
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setNavigationIcon(android.support.v7.appcompat.R.drawable.abc_ic_ab_back_material);
+        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_black_24dp);
         toolbar.setNavigationOnClickListener(view -> onBackPressed());
     }
 
     private Task<Map<String, Object>> getUserRecord(String uid) {
         Map<String, Object> data = new HashMap<>();
         data.put("uid", uid);
-        return mFunctions.getHttpsCallable("getUserRecord").call(data)
-                .continueWith(task -> {
-                    Map<String, Object> result = (Map<String, Object>) task.getResult().getData();
-                    return result;
-                });
-
+        return ManongActivity.mFunctions.getHttpsCallable("getUserRecord").call(data)
+                .continueWith(task -> (Map<String, Object>) task.getResult().getData());
     }
 
     @Override

@@ -2,19 +2,18 @@ package com.example.johnrobert.manongcustomer;
 
 import android.app.ActivityOptions;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.design.button.MaterialButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.transition.Slide;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.Gravity;
-import android.view.View;
 import android.view.Window;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -26,7 +25,6 @@ import java.util.Objects;
 
 public class PreRegisterActivity extends AppCompatActivity {
 
-    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
     private Intent intent;
     private ProgressBar progressBar;
     private MaterialButton nextButton;
@@ -34,7 +32,6 @@ public class PreRegisterActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setUpEnterTransition();
-        setUpExitTransition();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pre_register);
         setUpToolbar();
@@ -55,14 +52,21 @@ public class PreRegisterActivity extends AppCompatActivity {
             }
 
             if (!isEmailValid(emailEditText.getText())) {
-                emailTextInput.setError("Email Address must be valid.");
+                emailTextInput.setError("Email address must be valid.");
                 return;
             }else {
                 emailTextInput.setError(null);
             }
 
-            checkEmailIfExist(emailEditText.getText().toString());
+            checkEmailIfExist(emailEditText.getText().toString().trim());
 
+        });
+
+        emailEditText.setOnKeyListener((view, i, keyEvent) -> {
+            if (isEmailValid(emailEditText.getText())) {
+                emailTextInput.setError(null);
+            }
+            return false;
         });
 
     }
@@ -83,26 +87,29 @@ public class PreRegisterActivity extends AppCompatActivity {
     }
 
     private void setUpEnterTransition() {
+//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+//            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+//            Slide slide = new Slide(Gravity.END);
+//            slide.excludeTarget(android.R.id.statusBarBackground, true);
+//            slide.excludeTarget(android.R.id.navigationBarBackground, true);
+//            getWindow().setEnterTransition(slide);
+//        }
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
             Slide slide = new Slide(Gravity.END);
             slide.excludeTarget(android.R.id.statusBarBackground, true);
             slide.excludeTarget(android.R.id.navigationBarBackground, true);
-            getWindow().setEnterTransition(slide);
-        }
-    }
 
-    private void setUpExitTransition() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-            Slide fade = new Slide(Gravity.START);
-            getWindow().setExitTransition(fade);
+//            Slide slide1 = new Slide(Gravity.START);
+
+            getWindow().setEnterTransition(slide);
+//            getWindow().setExitTransition(slide1);
         }
     }
 
     private void checkEmailIfExist(String email) {
         showProgressbar(true);
-        mAuth.fetchSignInMethodsForEmail(email)
+        MainActivity.mAuth.fetchSignInMethodsForEmail(email)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         SignInMethodQueryResult providers = task.getResult();
@@ -129,11 +136,11 @@ public class PreRegisterActivity extends AppCompatActivity {
     }
 
     private boolean isEmailValid(Editable text) {
-        return text != null && text.length() != 0 && Patterns.EMAIL_ADDRESS.matcher(text).matches();
+        return text != null && text.toString().trim().length() != 0 && Patterns.EMAIL_ADDRESS.matcher(text.toString().trim()).matches();
     }
 
     private boolean isEmpty(Editable text) {
-        return text == null || text.length() == 0;
+        return text == null || text.toString().trim().length() == 0;
     }
 
     private void showProgressbar(boolean show) {

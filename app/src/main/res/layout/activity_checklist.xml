@@ -29,8 +29,8 @@
                 android:foreground="?attr/selectableItemBackgroundBorderless"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:layout_marginLeft="16dp"
-                android:layout_marginRight="16dp"
+                android:layout_marginLeft="24dp"
+                android:layout_marginRight="24dp"
                 android:contentDescription="@null"
                 android:layout_marginBottom="20dp"
                 android:layout_marginTop="20dp" />
@@ -39,9 +39,7 @@
                 android:id="@+id/all_content_element_share_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Checklist"
-                android:textSize="18sp"
-                style="@style/Widget.Manong.TextView.Checklist" />
+                android:textAppearance="@style/Widget.Manong.TextView.Checklist" />
 
         </LinearLayout>
 
@@ -50,16 +48,6 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@android:drawable/divider_horizontal_bright" />
-
-        <!--<TextView-->
-        <!--android:visibility="gone"-->
-        <!--android:id="@+id/all_element_share_no_share_text"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_margin="@dimen/spacing_normal_8dp"-->
-        <!--android:layout_marginLeft="@dimen/spacing_normal_8dp"-->
-        <!--android:text="While a surface is expanding, a significant number of elements should remain visible during the transition.\n\nComplex transitions should keep a single element visible."-->
-        <!--android:layout_marginStart="@dimen/spacing_normal_8dp" />-->
 
         <ernestoyaquello.com.verticalstepperform.VerticalStepperFormLayout
             android:id="@+id/all_element_share_no_share_text"

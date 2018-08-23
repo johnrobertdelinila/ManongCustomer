@@ -3,16 +3,16 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/navigational_transition_all_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F0F0F0"
     tools:context=".ChildActivity"
-    tools:targetApi="lollipop"
-    android:id="@+id/navigational_transition_all_layout"
-    android:transitionName="@string/transition_name_navigational_transition">
+    tools:targetApi="lollipop">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbarlayout"
-        app:elevation="0dp"
+        app:elevation="6dp"
         android:theme="@style/AppTheme.AppBarOverlay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -34,13 +34,15 @@
     </android.support.design.widget.AppBarLayout>
 
     <com.example.johnrobert.manongcustomer.ForegroundRelativeLayout
-        android:background="#F0F0F0"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:background="#F0F0F0"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <RelativeLayout
             android:id="@+id/first_container"
+            android:transitionName="@string/transition_name_navigational_transition"
+            android:elevation="1dp"
             android:paddingBottom="20dp"
             android:paddingStart="12dp"
             android:paddingLeft="12dp"
@@ -52,13 +54,17 @@
 
             <TextView
                 android:id="@+id/text_service_name"
+                android:transitionName="transition_service_name"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                android:textSize="20sp"
+                android:fontFamily="@font/rubik_medium"
                 android:layout_marginTop="5dp"
                 android:layout_marginBottom="4dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="16dp"
-                android:layout_marginLeft="16dp"
-                android:textAppearance="@style/SettingsTextAppearance" />
+                android:layout_marginLeft="16dp" />
+            <!--android:textAppearance="@style/SettingsTextAppearance"-->
 
             <TextView
                 android:layout_marginStart="16dp"
@@ -82,8 +88,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="31dp"
                 android:layout_alignStart="@+id/textview_id_icon"
-                android:textAppearance="@style/SettingsTextAppearance"
-                android:textSize="14sp"/>
+                android:textAppearance="@style/SettingsTextAppearance"/>
 
             <TextView
                 android:id="@+id/text_request_info"
@@ -108,6 +113,29 @@
                 android:layout_width="17dp"
                 android:layout_height="17dp"
                 android:contentDescription="@string/main_content_description_implementation_image" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/cancelled_container"
+            android:visibility="gone"
+            android:layout_below="@+id/first_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_centerInParent="true"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="This request has already cancelled."
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
 
         </RelativeLayout>
 
@@ -157,6 +185,7 @@
 
         <ScrollView
             android:id="@+id/scroll_provider_container"
+            android:elevation="0dp"
             android:layout_below="@+id/first_container"
             android:visibility="gone"
             android:layout_width="match_parent"
@@ -181,7 +210,6 @@
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
-
 
             </LinearLayout>
 

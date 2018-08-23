@@ -9,10 +9,8 @@ public class Service implements Serializable {
     private String serviceName;
 
     private ArrayList<String> title, subtitle;
-
     private ArrayList<ArrayList<String>> answers;
-
-    private ArrayList<Boolean> isInput;
+    private ArrayList<Boolean> isInput, isOptional;
     private ArrayList<Integer> viewTypes;
 
     private String locationName;
@@ -22,7 +20,8 @@ public class Service implements Serializable {
     public Service() {}
 
 
-    public Service(String serviceName, ArrayList<String> title, ArrayList<String> subtitle, ArrayList<ArrayList<String>> answers, ArrayList<Boolean> isInput, ArrayList<Integer> viewTypes, String locationName, Double latitude, Double longtitude) {
+    public Service(String serviceName, ArrayList<String> title, ArrayList<String> subtitle, ArrayList<ArrayList<String>> answers, ArrayList<Boolean> isInput,
+                   ArrayList<Integer> viewTypes, String locationName, Double latitude, Double longtitude, ArrayList<Boolean> isOptional) {
         this.serviceName = serviceName;
         this.title = title;
         this.subtitle = subtitle;
@@ -32,8 +31,16 @@ public class Service implements Serializable {
         this.locationName = locationName;
         this.latitude = latitude;
         this.longtitude = longtitude;
+        this.isOptional = isOptional;
     }
 
+    public ArrayList<Boolean> getIsOptional() {
+        return isOptional;
+    }
+
+    public void setIsOptional(ArrayList<Boolean> isOptional) {
+        this.isOptional = isOptional;
+    }
 
     public String getServiceName() {
         return serviceName;

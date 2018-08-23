@@ -39,8 +39,9 @@ public class ChecklistAdapter extends BaseAdapter {
     private ArrayList<ImageView> imageViews;
     public ImageView imageView1, imageView2, imageView3;
 
-    public static int init = 0;
-    private static final int EDIT_TEXT_CODE = -1996, PICK_IMAGE_REQUEST_CODE = 2006, TYPE_EDITTEXT = 0, TYPE_REGULAR = 1, TYPE_TEXTFIELD = 2, TYPE_DATE = 3, TYPE_ATTACHMENT = 4;
+    public int init = 0;
+    private static final int EDIT_TEXT_CODE = -1996, PICK_IMAGE_REQUEST_CODE = 2006, TYPE_EDITTEXT = 0,
+            TYPE_REGULAR = 1, TYPE_TEXTFIELD = 2, TYPE_DATE = 3, TYPE_ATTACHMENT = 4;
 
     public ChecklistAdapter(Context context, Boolean isTextField, Boolean isCheckBox, ArrayList<String> checkList, Boolean isInput, Boolean isAttachment, int stepNumber) {
         this.context = context;
@@ -70,9 +71,13 @@ public class ChecklistAdapter extends BaseAdapter {
         }
         if (isInput && arrayList.size() > 0 && !arrayList.get(0).equals(randomStringsForGetView)) {
             if (init == 0) {
+                Log.e("HELLO", "ADDED");
                 arrayList.add(randomStringsForGetView);
-//                Toast.makeText(context, "YAYAYAYAYAYAYAYYAYAYAYA", Toast.LENGTH_LONG).show();
+            }else {
+                Log.e("HELLO", "NOT ADDED - " + String.valueOf(init));
             }
+        }else {
+            Log.e("HELLO", "NOT INPUT");
         }
 
         init++;
@@ -192,12 +197,9 @@ public class ChecklistAdapter extends BaseAdapter {
             });
             for (int i = 0; i < imageViews.size(); i++) {
                 final int hello = i;
-                imageViews.get(i).setOnLongClickListener(new View.OnLongClickListener() {
-                    @Override
-                    public boolean onLongClick(View v) {
-                        resetImage(imageViews.get(hello), hello);
-                        return false;
-                    }
+                imageViews.get(i).setOnLongClickListener(v -> {
+                    resetImage(imageViews.get(hello), hello);
+                    return false;
                 });
             }
         }else {

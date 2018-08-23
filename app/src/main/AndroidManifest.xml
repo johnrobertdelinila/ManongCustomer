@@ -15,15 +15,15 @@
 
     <application
         android:allowBackup="true"
-        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher_new_square"
         android:label="@string/manong_app_name"
         android:roundIcon="@mipmap/ic_launcher_new_round"
-        android:screenOrientation="portrait"
         android:supportsRtl="true"
         android:theme="@style/Theme.Manong"
         tools:replace="android:label">
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -66,29 +66,47 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MapsActivity"
-            android:label="@string/title_activity_maps" />
-        <activity
             android:name=".ManongActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Manong.NoActionBar" />
         <activity
             android:name=".ServiceDetailActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Manong.NoActionBar.Detail" />
         <activity
             android:name=".ChecklistActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Manong.NoActionBar.ChoreographyShare" />
         <activity
-            android:name=".LoginActivity"
-            android:theme="@style/Theme.Manong.Translucent.Login" />
-        <activity
             android:name=".ChildActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Manong.NavigationalTransition" />
-        <activity android:name=".InfoActivity" />
-        <activity android:name=".MessageProviderActivity" />
-        <activity android:name=".RegisterActivity" />
-        <activity android:name=".PreRegisterActivity" />
-        <activity android:name=".ProfileActivity" />
-        <activity android:name=".ProviderProfileActivity"></activity>
+        <activity
+            android:name=".InfoActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".MessageProviderActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".RegisterActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".PreRegisterActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ProfileActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ProviderProfileActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".FullScreenImageActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Manong.FullScreenImage" />
+        <activity
+            android:name=".FullScreenImageRequestActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Manong.FullScreenImageRequest" />
     </application>
 
 </manifest>

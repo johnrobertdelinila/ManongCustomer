@@ -1,14 +1,13 @@
 package com.example.johnrobert.manongcustomer;
 
-import android.app.ActivityOptions;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.button.MaterialButton;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -17,40 +16,44 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.firebase.ui.auth.AuthUI;
-import com.github.florent37.shapeofview.shapes.CutCornerView;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.functions.FirebaseFunctions;
 
 import java.util.ArrayList;
 
 public class ManongActivity extends AppCompatActivity implements NavigationHost {
 
     private static final String more = "more";
-
-    // App Data
+    public static boolean isDoneFromService = false;
+    private int isUserDisabled = 0;
     private String currentFragment = "services";
-    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    private FirebaseUser user = mAuth.getCurrentUser();
+    public static Boolean jobs, messages, quotation;
 
-    // Widgets
+    public static FirebaseUser mUser = MainActivity.mAuth.getCurrentUser();
+
+    public static DatabaseReference providerRef = MainActivity.rootRef.child("Providers");
+    public static DatabaseReference requestRef = MainActivity.rootRef.child("Request");
+
+    public static FirebaseFunctions mFunctions = FirebaseFunctions.getInstance();
+
     private View scrim;
     private Toolbar toolbar;
     private FloatingActionButton fabLogin;
@@ -65,10 +68,28 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manong);
 
+        if (!isUserAuthenticated()) {
+            return;
+        }
+
+        MainActivity.customerRef.child(mUser.getUid()).child("settings").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                quotation = dataSnapshot.child(getString(R.string.manong_quotations)).getValue(Boolean.class);
+                messages = dataSnapshot.child(getString(R.string.manong_messages)).getValue(Boolean.class);
+                jobs = dataSnapshot.child(getString(R.string.manong_jobs)).getValue(Boolean.class);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
         scrim = findViewById(R.id.scrim);
         fabLogin = findViewById(R.id.fab_login);
         closeIcon = getResources().getDrawable(R.drawable.manong_close_menu);
-        openIcon = getResources().getDrawable(R.drawable.shr_branded_menu);
+        openIcon = getResources().getDrawable(R.drawable.manong_logo_nav);
 
         setUpToolbar();
 
@@ -79,27 +100,37 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
         }
 
         // Set default Fragment
-        if (savedInstanceState == null) {
+        if (savedInstanceState == null && !isDoneFromService) {
             getSupportFragmentManager()
                     .beginTransaction()
                     .add(R.id.container, new ServiceFragment())
                     .commit();
+        }else {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.container, new RequestFragment())
+                    .commit();
+
+            String title = "request";
+            currentFragment = title;
+            toolbar.setTitle(title);
+            setNewMarker(allButtons, backdropContainer, findViewById(R.id.nav_request_button));
         }
 
-        fabLogin.setOnClickListener(view -> {
-            Intent intent = new Intent(this, LoginActivity.class);
-            int color = ContextCompat.getColor(this, R.color.colorAccent);
-            if (AndroidVersionUtil.isGreaterThanL()) {
-                FabTransform.addExtras(intent, color, R.drawable.ic_person_black_24dp);
-            }
-            ActivityOptionsCompat optionsCompat = ActivityOptionsCompat
-                    .makeSceneTransitionAnimation(this,
-                            view,
-                            getString(R.string.transition_name_login));
-            ActivityCompat.startActivity(this,
-                    intent,
-                    optionsCompat.toBundle());
-        });
+//        fabLogin.setOnClickListener(view -> {
+//            Intent intent = new Intent(this, LoginActivity.class);
+//            int color = ContextCompat.getColor(this, R.color.colorAccent);
+//            if (AndroidVersionUtil.isGreaterThanL()) {
+//                FabTransform.addExtras(intent, color, R.drawable.ic_person_black_24dp);
+//            }
+//            ActivityOptionsCompat optionsCompat = ActivityOptionsCompat
+//                    .makeSceneTransitionAnimation(this,
+//                            view,
+//                            getString(R.string.transition_name_login));
+//            ActivityCompat.startActivity(this,
+//                    intent,
+//                    optionsCompat.toBundle());
+//        });
         // FIXME: PUTANG INA HINDI MAPALITAN UNG SHAPE
 
         scrim.setAlpha(0);
@@ -163,7 +194,7 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
 
         scrim.setOnClickListener(view -> customNavigation.onClick(toolbarNavigationIcon));
 
-        if (user == null) {
+        if (mUser == null) {
             Intent intent = new Intent(this, MainActivity.class);
             finish();
             startActivity(intent);
@@ -177,6 +208,10 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
         int defaultDelay = 345;
         if (currentFragment.equalsIgnoreCase("services"))
             defaultDelay = 350;
+        if (isDoneFromService) {
+            defaultDelay = 0;
+            isDoneFromService = false;
+        }
         new Handler().postDelayed(() -> navigateTo(fragment, false), defaultDelay);
     }
 
@@ -211,6 +246,12 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
 
         // Initialize Menu search
         searchMenu = menu.findItem(R.id.search);
+
+        if (isDoneFromService) {
+            searchMenu.setVisible(true);
+            isDoneFromService = false;
+        }
+
         SearchView searchView = (SearchView) searchMenu.getActionView();
 
         SearchManager searchManager = null;
@@ -225,9 +266,11 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
         }
 
         if (searchView != null) {
+            searchView.setQueryHint("Search");
             searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 public boolean onQueryTextSubmit(String s) {
+                    Toast.makeText(ManongActivity.this, "Hello", Toast.LENGTH_SHORT).show();
                     return true;
                 }
 
@@ -286,4 +329,56 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    private void goToLoginPage() {
+        FirebaseAuth.getInstance().signOut();
+        Intent intent = new Intent(this, MainActivity.class);
+        finish();
+        startActivity(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        isUserAuthenticated();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        isUserAuthenticated();
+    }
+
+    private boolean isUserAuthenticated() {
+        FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (mUser == null) {
+            goToLoginPage();
+            return false;
+        }else {
+            mUser.getIdToken(true)
+                    .addOnFailureListener(e -> {
+                        Log.e("DISABLED", String.valueOf(e));
+                        if (e instanceof FirebaseAuthInvalidUserException && isUserDisabled == 0) {
+                            // The user account has been disabled by an administrator
+                            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+                            isUserDisabled++;
+                            goToLoginPage();
+                        }
+                    });
+            return true;
+        }
+    }
+
+    //    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        if (isDoneFromService) {
+//
+//            String title = "request";
+//            navigateFragment(new RequestFragment());
+//            currentFragment = title;
+//            toolbar.setTitle(title);
+//            setNewMarker(allButtons, backdropContainer, findViewById(R.id.nav_request_button));
+//            searchMenu.setVisible(true);
+//        }
+//    }
 }

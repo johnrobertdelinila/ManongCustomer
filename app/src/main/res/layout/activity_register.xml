@@ -51,7 +51,7 @@
                 android:fontFamily="@font/rubik_medium"
                 android:textSize="20sp"
                 android:textColor="@color/textColorPrimary"
-                android:text="Enter your contact details"
+                android:text="Account details."
                 android:layout_marginBottom="28dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -60,7 +60,7 @@
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/email_text_input"
                 style="@style/Widget.Manong.TextInputLayout.Register"
-                android:hint="Email Address"
+                android:hint="Email address"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:focusable="false"
@@ -81,7 +81,7 @@
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/fullname_text_input"
                 style="@style/Widget.Manong.TextInputLayout.Register"
-                android:hint="Full Name"
+                android:hint="Full name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:errorEnabled="true"
@@ -117,7 +117,7 @@
                 <android.support.design.widget.TextInputLayout
                     android:id="@+id/phone_text_input"
                     style="@style/Widget.Manong.TextInputLayout.Register"
-                    android:hint="Phone Number (optional)"
+                    android:hint="Phone number (optional)"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:errorEnabled="true"
@@ -159,7 +159,7 @@
             <android.support.design.widget.TextInputLayout
                 style="@style/Widget.Manong.TextInputLayout.Register"
                 android:id="@+id/confirmpassword_text_input"
-                android:hint="Confirm Password"
+                android:hint="Confirm password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:passwordToggleEnabled="true"

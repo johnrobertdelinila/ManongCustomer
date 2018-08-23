@@ -20,6 +20,7 @@
 
     <android.support.design.button.MaterialButton
         style="@style/Widget.Manong.Button.TextButton.Bold"
+        android:id="@+id/nav_request_button"
         android:clickable="true"
         android:focusable="true"
         android:foreground="?attr/selectableItemBackgroundBorderless"

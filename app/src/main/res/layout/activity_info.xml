@@ -41,7 +41,6 @@
             android:paddingLeft="32dp"
             android:paddingEnd="32dp"
             android:paddingRight="32dp"
-            android:id="@+id/container_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="28dp"
@@ -49,91 +48,124 @@
             android:background="@android:color/white">
 
             <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:text="ID"
-                    android:padding="5dp"
-                    android:textStyle="bold"
-                    android:textAppearance="@style/SettingsTextAppearance"
-                    android:textSize="12sp"
-                    android:textColor="@android:color/white"
-                    android:background="@color/colorPrimaryDark"
-                    android:layout_marginEnd="10dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-                <TextView
-                    android:textAppearance="@style/SettingsTextAppearance"
-                    android:textSize="14sp"
-                    android:id="@+id/text_info_id"
-                    android:text="INFO ID"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-            <TextView
-                android:visibility="invisible"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <ImageView
-                    android:layout_marginStart="3dp"
-                    android:layout_marginEnd="14dp"
-                    app:srcCompat="@drawable/ic_date_range_black_24dp"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp" />
-
-                <TextView
-                    android:textAppearance="@style/SettingsTextAppearance"
-                    android:id="@+id/text_info_date"
-                    android:text="DATE"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-            <TextView
-                android:visibility="invisible"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <ImageView
-                    android:layout_marginStart="3dp"
-                    android:layout_marginEnd="14dp"
-                    app:srcCompat="@drawable/ic_location_on_black_24dp"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp" />
-
-                <TextView
-                    android:textAppearance="@style/SettingsTextAppearance"
-                    android:id="@+id/text_info_location"
-                    android:text="--"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-            <View
-                android:id="@+id/divider"
-                android:layout_marginBottom="20dp"
-                android:layout_marginTop="20dp"
+                android:orientation="vertical"
+                android:id="@+id/container_layout"
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@android:drawable/divider_horizontal_bright" />
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:text="ID"
+                        android:padding="5dp"
+                        android:textStyle="bold"
+                        android:textAppearance="@style/SettingsTextAppearance"
+                        android:textSize="12sp"
+                        android:textColor="@android:color/white"
+                        android:background="@color/colorPrimaryDark"
+                        android:layout_marginEnd="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:textAppearance="@style/SettingsTextAppearance"
+                        android:id="@+id/text_info_id"
+                        android:text="INFO ID"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:visibility="invisible"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="14dp"
+                        app:srcCompat="@drawable/ic_date_range_black_24dp"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp" />
+
+                    <TextView
+                        android:textAppearance="@style/SettingsTextAppearance"
+                        android:id="@+id/text_info_date"
+                        android:text="DATE"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:visibility="invisible"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="14dp"
+                        app:srcCompat="@drawable/ic_location_on_black_24dp"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp" />
+
+                    <TextView
+                        android:textAppearance="@style/SettingsTextAppearance"
+                        android:id="@+id/text_info_location"
+                        android:text="No available location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/divider"
+                    android:layout_marginBottom="20dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@android:drawable/divider_horizontal_bright" />
+
+            </LinearLayout>
+
+            <com.github.florent37.shapeofview.shapes.CutCornerView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:id="@+id/container_cut_button"
+                android:layout_marginBottom="10dp"
+                app:shape_cutCorner_bottomLeftSize="12dp"
+                app:shape_cutCorner_bottomRightSize="12dp"
+                app:shape_cutCorner_topLeftSize="12dp"
+                app:shape_cutCorner_topRightSize="12dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:targetApi="lollipop">
+
+                    <android.support.design.button.MaterialButton
+                        android:id="@+id/cancel_button"
+                        style="@style/Widget.Manong.Button"
+                        android:text="CANCEL REQUEST"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                </RelativeLayout>
+
+            </com.github.florent37.shapeofview.shapes.CutCornerView>
 
         </LinearLayout>
 

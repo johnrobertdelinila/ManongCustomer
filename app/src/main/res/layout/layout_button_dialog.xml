@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout
+        android:layout_alignParentEnd="true"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <android.support.design.button.MaterialButton
+            android:id="@+id/cancel_button"
+            style="@style/Widget.Manong.Button.TextButton"
+            android:layout_marginEnd="12dp"
+            android:text="BACK"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <com.github.florent37.shapeofview.shapes.CutCornerView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/container_cut_button"
+            app:shape_cutCorner_bottomLeftSize="12dp"
+            app:shape_cutCorner_bottomRightSize="12dp"
+            app:shape_cutCorner_topLeftSize="12dp"
+            app:shape_cutCorner_topRightSize="12dp">
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:targetApi="lollipop">
+
+                <android.support.design.button.MaterialButton
+                    android:id="@+id/submit_button"
+                    style="@style/Widget.Manong.Button"
+                    android:text="SUBMIT"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </RelativeLayout>
+
+        </com.github.florent37.shapeofview.shapes.CutCornerView>
+
+    </LinearLayout>
+
+</RelativeLayout>

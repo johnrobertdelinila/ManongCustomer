@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     style="@style/Widget.MaterialComponents.CardView"
     app:cardElevation="1dp"
     app:cardCornerRadius="0dp"
@@ -10,7 +12,6 @@
     app:contentPaddingLeft="@dimen/padding_dialog_24dp"
     app:contentPaddingTop="10dp"
     app:contentPaddingBottom="10dp"
-    android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/spacing_normal_8dp"
     android:clickable="true"
     android:foreground="?android:attr/selectableItemBackground"
@@ -28,11 +29,13 @@
             app:contentPaddingTop="7dp"
             app:contentPaddingBottom="7dp"
             app:cardBackgroundColor="@color/colorPrimaryDark"
+            android:id="@+id/card_cancelled_compare"
             android:layout_marginBottom="5dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
             <TextView
+                android:id="@+id/text_cancelled_compare"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
                 android:textColor="@android:color/white"
                 android:textSize="14sp"

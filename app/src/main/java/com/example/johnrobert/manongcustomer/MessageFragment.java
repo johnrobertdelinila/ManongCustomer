@@ -2,10 +2,14 @@ package com.example.johnrobert.manongcustomer;
 
 
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
@@ -20,6 +24,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.Target;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
@@ -57,14 +67,11 @@ public class MessageFragment extends Fragment {
     private ProgressBar progressBar;
     private TextView textNoData;
 
-    private FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
-    private DatabaseReference rootRef = mDatabase.getReference();
-    private DatabaseReference customerRef = rootRef.child("Customers");
-    private DatabaseReference providerRef = rootRef.child("Providers");
-    private DatabaseReference messagesRef = rootRef.child("Messages");
-    private FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+    private FirebaseUser user = ManongActivity.mUser;
+
+    private DatabaseReference messagesRef = MainActivity.rootRef.child("Messages");
+
     private FirebaseRecyclerAdapter firebaseAdapter;
-    private FirebaseFunctions mFunctions = FirebaseFunctions.getInstance();
 
     public MessageFragment() {
         // Required empty public constructor
@@ -131,11 +138,11 @@ public class MessageFragment extends Fragment {
 
         if (user != null) {
             // Database Reference of all the provider's Customer list.
-            customerRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
+            MainActivity.customerRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.hasChild("service_providers")) {
-                        DatabaseReference customerContactRef = customerRef.child(user.getUid()).child("service_providers");
+                        DatabaseReference customerContactRef = MainActivity.customerRef.child(user.getUid()).child("service_providers");
                         setUpFirebaseRecyclerView(customerContactRef);
                     }else {
                         progressBar.setVisibility(ProgressBar.GONE);
@@ -188,14 +195,17 @@ public class MessageFragment extends Fragment {
 
                 getProviderProfile(customer.getProviderId(), intentProviderProfile, intent);
 
+                intentProviderProfile.putExtra("providerId", customer.getProviderId());
                 holder.profile_picture.setOnClickListener(view -> {
-                    intentProviderProfile.putExtra("providerId", customer.getProviderId());
-                    startActivity(intentProviderProfile);
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                        startActivity(intentProviderProfile);
+                    } else {
+                        final ActivityOptions options = ActivityOptions
+                                .makeSceneTransitionAnimation(activity, view, "iyot_buto_uki");
+                        startActivity(intentProviderProfile, options.toBundle());
+                    }
                 });
-                holder.temp_image_view.setOnClickListener(view -> {
-                    intentProviderProfile.putExtra("providerId", customer.getProviderId());
-                    startActivity(intentProviderProfile);
-                });
+                holder.temp_image_view.setOnClickListener(view -> startActivity(intentProviderProfile));
 
                 checkIfMessageExist(customer.getProviderId(), customer.getMessageLinkKey(), holder.text_last_message, holder.text_last_date, holder.text_provider_name,
                         holder.profile_picture, holder.temp_image_view, intent, intentProviderProfile);
@@ -217,9 +227,10 @@ public class MessageFragment extends Fragment {
                 }
 
                 holder.itemView.setOnClickListener(view -> {
-                    String elementName = getString(R.string.transition_name_navigational_transition);
-                    ActivityOptionsCompat activityOptionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, view, elementName);
-                    startActivity(intent, activityOptionsCompat.toBundle());
+//                    String elementName = getString(R.string.transition_name_navigational_transition);
+//                    ActivityOptionsCompat activityOptionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, view, elementName);
+//                    startActivity(intent, activityOptionsCompat.toBundle());
+                    startActivity(intent);
                 });
 
             }
@@ -230,7 +241,7 @@ public class MessageFragment extends Fragment {
     }
 
     private void getProviderProfile(String providerId, Intent intent, Intent intent2) {
-        providerRef.child(providerId).child("my_profile").addListenerForSingleValueEvent(new ValueEventListener() {
+        ManongActivity.providerRef.child(providerId).child("my_profile").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 ProviderProfile providerProfile = dataSnapshot.getValue(ProviderProfile.class);
@@ -270,10 +281,23 @@ public class MessageFragment extends Fragment {
                             }
                             Glide.with(activity.getApplicationContext())
                                     .load(photoURL)
+                                    .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
+                                    .listener(new RequestListener<Drawable>() {
+                                        @Override
+                                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                            return false;
+                                        }
+
+                                        @Override
+                                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                            profile_picture.setImageDrawable(resource);
+                                            temp_image.setVisibility(CardView.GONE);
+                                            profile_picture.setVisibility(CircleImageView.VISIBLE);
+                                            return false;
+                                        }
+                                    })
                                     .into(profile_picture);
                         }
-                        temp_image.setVisibility(CardView.GONE);
-                        profile_picture.setVisibility(CircleImageView.VISIBLE);
                         if (displayName != null) {
                             text_provider_name.setText(displayName);
                         }else {
@@ -340,9 +364,22 @@ public class MessageFragment extends Fragment {
                                 }
                                 Glide.with(activity.getApplicationContext())
                                         .load(photoURL)
+                                        .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
+                                        .listener(new RequestListener<Drawable>() {
+                                            @Override
+                                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                                return false;
+                                            }
+
+                                            @Override
+                                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                                temp_image.setVisibility(CardView.GONE);
+                                                profile_picture.setVisibility(CircleImageView.VISIBLE);
+                                                temp_image.setVisibility(CardView.GONE);
+                                                return false;
+                                            }
+                                        })
                                         .into(profile_picture);
-                                temp_image.setVisibility(CardView.GONE);
-                                profile_picture.setVisibility(CircleImageView.VISIBLE);
                                 intentProvider.putExtra("providerPhotoUrl", photoURL);
                             }
                         }
@@ -363,7 +400,7 @@ public class MessageFragment extends Fragment {
         Map<String, Object> data = new HashMap<>();
         data.put("uid", uid);
         // Call callable function from Firebase Functions
-        return mFunctions.getHttpsCallable("getUserRecord").call(data)
+        return ManongActivity.mFunctions.getHttpsCallable("getUserRecord").call(data)
                 .continueWith(task -> {
                     Map<String, Object> result = (Map<String, Object>) task.getResult().getData();
 //                    return (String) result.get("displayName");

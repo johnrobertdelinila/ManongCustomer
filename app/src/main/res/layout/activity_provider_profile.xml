@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+    android:background="@color/serviceGridBackgroundColor"
     tools:context=".ProviderProfileActivity">
 
     <android.support.design.widget.AppBarLayout
@@ -32,12 +33,12 @@
 
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/providerImage"
+                    android:transitionName="iyot_buto_uki"
                     android:layout_marginTop="48dp"
                     android:layout_width="@dimen/image_size"
                     android:layout_height="@dimen/image_size"
                     android:layout_centerHorizontal="true"
-                    android:src="@drawable/manong_customer_logo"
-                    android:scaleType="centerCrop" />
+                    tools:targetApi="lollipop" />
 
                 <!--app:civ_border_width="2dp"-->
                 <!--app:civ_border_color="@color/loginPageBackgroundColor"-->
@@ -67,6 +68,7 @@
                 android:layout_height="?attr/actionBarSize"
                 style="@style/Widget.Manong.Toolbar.Profile"
                 app:layout_collapseMode="pin"
+                app:title=" "
                 app:popupTheme="@style/AppTheme.PopupOverlay" />
 
         </android.support.design.widget.CollapsingToolbarLayout>
@@ -89,35 +91,44 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <android.support.v4.widget.NestedScrollView
-        android:id="@+id/content_dynamic_durations"
-        android:layout_width="match_parent"
-        android:fillViewport="true"
-        android:layout_height="match_parent"
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewpager"
+        android:visibility="gone"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:context=".ProviderProfileActivity">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-        <LinearLayout
-            android:paddingStart="12dp"
-            android:paddingLeft="12dp"
-            android:paddingEnd="12dp"
-            android:paddingRight="12dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+    <!--<android.support.v4.widget.NestedScrollView-->
+        <!--android:id="@+id/content_dynamic_durations"-->
+        <!--android:visibility="gone"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:fillViewport="true"-->
+        <!--android:layout_height="match_parent"-->
+        <!--app:layout_behavior="@string/appbar_scrolling_view_behavior"-->
+        <!--tools:context=".ProviderProfileActivity">-->
 
-            <android.support.v4.view.ViewPager
-                android:id="@+id/viewpager"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+        <!--<LinearLayout-->
+            <!--android:paddingStart="12dp"-->
+            <!--android:paddingLeft="12dp"-->
+            <!--android:paddingEnd="12dp"-->
+            <!--android:paddingRight="12dp"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:orientation="vertical">-->
 
-        </LinearLayout>
+            <!--<android.support.v4.view.ViewPager-->
+                <!--android:id="@+id/viewpager"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent" />-->
 
-    </android.support.v4.widget.NestedScrollView>
+        <!--</LinearLayout>-->
+
+    <!--</android.support.v4.widget.NestedScrollView>-->
 
     <android.support.design.widget.FloatingActionButton
         style="@style/Widget.MaterialComponents.FloatingActionButton"
         android:id="@+id/fab_call"
+        android:visibility="invisible"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:tint="@color/textColorPrimary"
@@ -138,7 +149,6 @@
         tools:targetApi="lollipop">
 
         <ProgressBar
-            android:id="@+id/progress_bar"
             style="?android:attr/progressBarStyleLarge"
             android:layout_centerInParent="true"
             android:layout_width="wrap_content"

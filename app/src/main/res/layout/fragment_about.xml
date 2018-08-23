@@ -1,73 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_height="match_parent"
     android:layout_width="match_parent"
-    android:background="@color/serviceGridBackgroundColor">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:paddingBottom="15dp"
+    android:background="@color/serviceGridBackgroundColor"
+    tools:context=".AboutFragment">
 
-    <ScrollView
+    <com.github.florent37.shapeofview.shapes.CutCornerView
+        android:id="@+id/container_cut_button"
         android:layout_width="match_parent"
-        android:paddingTop="15dp"
-        android:paddingBottom="15dp"
-        android:layout_height="match_parent"
-        tools:context=".AboutFragment">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        app:shape_cutCorner_bottomLeftSize="12dp"
+        app:shape_cutCorner_bottomRightSize="12dp"
+        app:shape_cutCorner_topLeftSize="12dp"
+        app:shape_cutCorner_topRightSize="12dp">
 
-        <LinearLayout
-            android:visibility="gone"
-            android:id="@+id/linear_container"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="12dp"
-            android:paddingLeft="12dp"
-            android:paddingEnd="12dp"
-            android:paddingRight="12dp"
-            android:orientation="vertical">
+            tools:targetApi="lollipop">
 
-            <com.github.florent37.shapeofview.shapes.CutCornerView
-                android:layout_gravity="center_horizontal"
+            <android.support.design.button.MaterialButton
+                android:id="@+id/book_button"
+                style="@style/Widget.Manong.Button"
+                android:text="UPDATE"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="15dp"
-                app:shape_cutCorner_bottomLeftSize="12dp"
-                app:shape_cutCorner_bottomRightSize="12dp"
-                app:shape_cutCorner_topLeftSize="12dp"
-                app:shape_cutCorner_topRightSize="12dp">
+                android:layout_height="wrap_content" />
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    tools:targetApi="lollipop">
+        </RelativeLayout>
 
-                    <android.support.design.button.MaterialButton
-                        android:id="@+id/book_button"
-                        style="@style/Widget.Manong.Button"
-                        android:text="BOOKED"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+    </com.github.florent37.shapeofview.shapes.CutCornerView>
 
-                </RelativeLayout>
-
-            </com.github.florent37.shapeofview.shapes.CutCornerView>
-
-        </LinearLayout>
-
-    </ScrollView>
-
-    <RelativeLayout
-        android:layout_marginTop="20dp"
-        android:id="@+id/loading_container"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_below="@+id/container_cut_button"
+        android:scrollbars="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent" />
 
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            style="?android:attr/progressBarStyleLarge"
-            android:layout_centerInParent="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
-    </RelativeLayout>
-
-</FrameLayout>
+</RelativeLayout>
