@@ -4,23 +4,20 @@ package com.example.johnrobert.manongcustomer;
 import android.app.Activity;
 import android.app.ActivityOptions;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
@@ -28,19 +25,8 @@ import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.functions.FirebaseFunctions;
-import com.google.firebase.functions.FirebaseFunctionsException;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -98,7 +84,7 @@ public class MoreFragment extends Fragment implements CompoundButton.OnCheckedCh
         view.findViewById(R.id.profile_container).setOnClickListener(profileview -> {
             Intent intent = new Intent(getActivity(), ProfileActivity.class);
 //            activity.startActivityForResult(intent, REQUEST_CODE);
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(activity).toBundle();
                 this.startActivity(intent, bundle);
             }else {
@@ -124,6 +110,13 @@ public class MoreFragment extends Fragment implements CompoundButton.OnCheckedCh
             AlertDialog dialogg = dialog.create();
             dialogg.show();
 
+        });
+
+        FirebaseAnalytics mFirebaseAnalytics = FirebaseAnalytics.getInstance(activity);
+        view.findViewById(R.id.btn_developers).setOnClickListener(view1 -> {
+            Bundle bundle = new Bundle();
+            bundle.putString(FirebaseAnalytics.Param.VALUE, "CLICKED");
+            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SHARE, bundle);
         });
 
         return view;
@@ -169,6 +162,11 @@ public class MoreFragment extends Fragment implements CompoundButton.OnCheckedCh
                                 }
                             })
                             .into(userProfileImage);
+                }else {
+                    userProfileImage.setImageDrawable(ContextCompat.getDrawable(activity,
+                            R.mipmap.ic_account_circle_black_36dp));
+                    tempImage.setVisibility(CardView.GONE);
+                    userProfileImage.setVisibility(CircleImageView.VISIBLE);
                 }
             }
         }

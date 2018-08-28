@@ -27,6 +27,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.crashlytics.android.answers.FirebaseAnalyticsEvent;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseUser;
@@ -36,6 +40,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.functions.FirebaseFunctions;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 
 import java.util.ArrayList;
 
@@ -56,10 +62,10 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
 
     private View scrim;
     private Toolbar toolbar;
+    private NavigationIconClickListener customNavigation;
     private FloatingActionButton fabLogin;
     private ImageView toolbarNavigationIcon;
     private Drawable closeIcon, openIcon;
-    private MenuItem searchMenu;
     private LinearLayout backdropContainer;
     private ArrayList<View> allButtons;
 
@@ -68,9 +74,13 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manong);
 
+        mUser = MainActivity.mAuth.getCurrentUser();
+
         if (!isUserAuthenticated()) {
             return;
         }
+
+        sendRegistrationToken();
 
         MainActivity.customerRef.child(mUser.getUid()).child("settings").addValueEventListener(new ValueEventListener() {
             @Override
@@ -96,6 +106,8 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Add shape
             findViewById(R.id.service_grid).setBackground(getDrawable(R.drawable.manong_container_grid_background_shape));
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             scrim.setBackground(getDrawable(R.drawable.manong_scrim_background_shape));
         }
 
@@ -143,7 +155,7 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
 
         this.setSupportActionBar(toolbar);
 
-        final NavigationIconClickListener customNavigation = new NavigationIconClickListener(this, findViewById(R.id.service_grid),
+        customNavigation = new NavigationIconClickListener(this, findViewById(R.id.service_grid),
                 new AccelerateDecelerateInterpolator(),
                 openIcon,
                 closeIcon,
@@ -183,11 +195,6 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
                     toolbar.setTitle(btnText);
                 }
 
-                if (btnText.equalsIgnoreCase("request")) {
-                    searchMenu.setVisible(true);
-                }else {
-                    searchMenu.setVisible(false);
-                }
 
             });
         }
@@ -245,41 +252,36 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
         getMenuInflater().inflate(R.menu.manong_toolbar_menu, menu);
 
         // Initialize Menu search
-        searchMenu = menu.findItem(R.id.search);
+//        searchMenu = menu.findItem(R.id.search);
 
-        if (isDoneFromService) {
-            searchMenu.setVisible(true);
-            isDoneFromService = false;
-        }
-
-        SearchView searchView = (SearchView) searchMenu.getActionView();
-
-        SearchManager searchManager = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        }
-
-        if (searchManager != null && searchView != null) {
-            searchView.setSearchableInfo(searchManager
-                    .getSearchableInfo(getComponentName()));
-            searchView.setIconifiedByDefault(false);
-        }
-
-        if (searchView != null) {
-            searchView.setQueryHint("Search");
-            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                @Override
-                public boolean onQueryTextSubmit(String s) {
-                    Toast.makeText(ManongActivity.this, "Hello", Toast.LENGTH_SHORT).show();
-                    return true;
-                }
-
-                @Override
-                public boolean onQueryTextChange(String s) {
-                    return true;
-                }
-            });
-        }
+//        SearchView searchView = (SearchView) searchMenu.getActionView();
+//
+//        SearchManager searchManager = null;
+//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+//            searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+//        }
+//
+//        if (searchManager != null && searchView != null) {
+//            searchView.setSearchableInfo(searchManager
+//                    .getSearchableInfo(getComponentName()));
+//            searchView.setIconifiedByDefault(false);
+//        }
+//
+//        if (searchView != null) {
+//            searchView.setQueryHint("Search");
+//            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+//                @Override
+//                public boolean onQueryTextSubmit(String s) {
+//                    Toast.makeText(ManongActivity.this, "Hello", Toast.LENGTH_SHORT).show();
+//                    return true;
+//                }
+//
+//                @Override
+//                public boolean onQueryTextChange(String s) {
+//                    return true;
+//                }
+//            });
+//        }
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -288,20 +290,19 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.filter:
-//                Intent intent = new Intent(ManongActivity.this, ProfileActivity.class);
-//                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-//                    Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(ManongActivity.this).toBundle();
-//                    this.startActivity(intent, bundle);
-//                }else {
-//                    startActivity(intent);
-//                }
 
                 if (!currentFragment.equalsIgnoreCase(more)) {
-                    navigateTo(new MoreFragment(), false);
+//                    navigateTo(new MoreFragment(), false);
+//                    currentFragment = more;
+//                    toolbar.setTitle(more);
+//                    setNewMarker(allButtons, backdropContainer, findViewById(R.id.nav_more_button));
+//                    searchMenu.setVisible(false);
+
+                    customNavigation.onClickMore(toolbarNavigationIcon);
+                    setNewMarker(allButtons, backdropContainer, findViewById(R.id.nav_more_button));
+                    navigateFragment(new MoreFragment());
                     currentFragment = more;
                     toolbar.setTitle(more);
-                    setNewMarker(allButtons, backdropContainer, findViewById(R.id.nav_more_button));
-                    searchMenu.setVisible(false);
                 }
 
                 return true;
@@ -366,6 +367,19 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
                     });
             return true;
         }
+    }
+
+    private void sendRegistrationToken() {
+        FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                String fcmToken = task.getResult().getToken();
+                Log.e("FCM TOKEN", fcmToken);
+                MainActivity.customerRef.child(mUser.getUid()).child("fcmTokenDevice").setValue(fcmToken);
+            }else if (task.getException() != null) {
+                Toast.makeText(ManongActivity.this, "Token: " + task.getException().getMessage(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     //    @Override

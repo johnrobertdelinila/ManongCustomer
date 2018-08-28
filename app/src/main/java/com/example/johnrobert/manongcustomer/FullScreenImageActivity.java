@@ -29,6 +29,8 @@ public class FullScreenImageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_full_screen_image);
 
+        postponeEnterTransition();
+
         imageView = findViewById(R.id.image);
         String image_url = getIntent().getStringExtra(IMAGE_URL_KEY);
 
@@ -40,6 +42,7 @@ public class FullScreenImageActivity extends AppCompatActivity {
                     .into(new SimpleTarget<Drawable>() {
                         @Override
                         public void onResourceReady(@NonNull Drawable resource, @Nullable com.bumptech.glide.request.transition.Transition<? super Drawable> transition) {
+                            startPostponedEnterTransition();
                             imageView.setImageDrawable(resource);
                         }
                     });

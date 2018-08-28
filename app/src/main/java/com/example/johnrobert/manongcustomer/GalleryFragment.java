@@ -29,6 +29,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -65,7 +66,6 @@ public class GalleryFragment extends Fragment {
     private Activity activity;
     private Context context;
     private String providerId;
-    private String providerPhotoUrl;
 
     private DatabaseReference photosRef;
     private FirebaseRecyclerAdapter firebaseAdapter;
@@ -73,6 +73,7 @@ public class GalleryFragment extends Fragment {
     private RecyclerView recyclerView;
     private GridLayoutManager gridLayoutManager;
     private ProgressBar progressBar;
+    private TextView textNoPhoto;
 
 
     public GalleryFragment() {
@@ -127,12 +128,12 @@ public class GalleryFragment extends Fragment {
         activity = getActivity();
         context = getContext();
         providerId = getArguments().getString("providerId");
-        providerPhotoUrl = getArguments().getString("providerPhotoUrl");
 
         recyclerView = view.findViewById(R.id.recycler_view);
         gridLayoutManager = new GridLayoutManager(activity, 2);
         recyclerView.setLayoutManager(gridLayoutManager);
         progressBar = view.findViewById(R.id.progress_bar);
+        textNoPhoto = view.findViewById(R.id.text_no_photo);
 
         if (ProviderProfileActivity.sakuChan != null) {
             progressBar.getIndeterminateDrawable().setColorFilter(ProviderProfileActivity.sakuChan.getRgb(),
@@ -150,9 +151,16 @@ public class GalleryFragment extends Fragment {
                     if (dataSnapshot.hasChild("photos")) {
                         setupFirebaseRecyclerView(photosRef);
 
-                        view.findViewById(R.id.progress_bar).setVisibility(RelativeLayout.GONE);
+                        textNoPhoto.setVisibility(View.GONE);
                         recyclerView.setVisibility(RecyclerView.VISIBLE);
+
                         checkRef.removeEventListener(this);
+                    }else {
+                        textNoPhoto.setVisibility(View.VISIBLE);
+                        view.findViewById(R.id.progress_bar).setVisibility(RelativeLayout.VISIBLE);
+                        recyclerView.setVisibility(RecyclerView.VISIBLE);
+
+                        progressBar.setVisibility(View.GONE);
                     }
                 }
 
@@ -192,23 +200,31 @@ public class GalleryFragment extends Fragment {
             protected void onBindViewHolder(@NonNull PhotoViewHolder holder, int position, @NonNull Photos photo) {
                 holder.temp_image.resetLoader();
                 holder.itemView.setOnClickListener(view -> showFullScreenImage(photo.getUrl(), view));
-                Glide.with(activity.getApplicationContext())
-                        .load(photo.url)
-                        .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
-                        .listener(new RequestListener<Drawable>() {
-                            @Override
-                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                                return false;
-                            }
+                try {
+                    Glide.with(activity.getApplicationContext())
+                            .load(photo.url)
+                            .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.ALL)
+                                    .skipMemoryCache(true))
+//                        .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.ALL)
+//                                .skipMemoryCache(true).override(800, 800))
+                            .listener(new RequestListener<Drawable>() {
+                                @Override
+                                public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                    return false;
+                                }
 
-                            @Override
-                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                                holder.temp_image.setVisibility(LoaderImageView.INVISIBLE);
-                                holder.image.setImageDrawable(resource);
-                                return false;
-                            }
-                        })
-                        .into(holder.image);
+                                @Override
+                                public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                    holder.temp_image.setVisibility(LoaderImageView.INVISIBLE);
+                                    holder.image.setImageDrawable(resource);
+                                    return false;
+                                }
+                            })
+                            .into(holder.image);
+                }catch (Exception e) {
+                    Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+                progressBar.setVisibility(View.GONE);
             }
         };
 

@@ -21,7 +21,6 @@
             android:id="@+id/implementation_imge"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:src="@drawable/no_image"
             android:contentDescription="@string/main_content_description_implementation_image"
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"

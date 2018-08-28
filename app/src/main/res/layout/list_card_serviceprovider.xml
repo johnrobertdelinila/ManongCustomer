@@ -44,6 +44,7 @@
                     android:layout_centerVertical="true"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
+                    android:src="@mipmap/ic_account_circle_black_36dp"
                     tools:targetApi="lollipop" />
 
                 <!--android:adjustViewBounds="false"-->

@@ -169,6 +169,7 @@
                             android:layout_height="match_parent">
 
                             <android.support.design.card.MaterialCardView
+                                android:id="@+id/place_autocomplete_fragment_container"
                                 android:layout_margin="10dp"
                                 android:layout_alignParentTop="true"
                                 android:layout_width="match_parent"
@@ -239,7 +240,7 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:text="Fill up the checklist"
+                    android:text="Fill up your checklist"
                     android:layout_marginTop="36dp"
                     android:layout_marginRight="24dp"
                     android:layout_marginLeft="24dp"

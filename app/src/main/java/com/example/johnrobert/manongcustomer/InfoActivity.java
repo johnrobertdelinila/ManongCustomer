@@ -6,11 +6,13 @@ import android.app.ActivityOptions;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.design.button.MaterialButton;
 import android.support.design.widget.TextInputEditText;
+import android.support.v4.view.GravityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.transition.Slide;
 import android.util.Log;
 import android.view.Gravity;
@@ -19,24 +21,23 @@ import android.view.Window;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
-import android.support.v7.widget.Toolbar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.github.florent37.shapeofview.shapes.CutCornerView;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 
 public class InfoActivity extends AppCompatActivity {
 
@@ -127,7 +128,14 @@ public class InfoActivity extends AppCompatActivity {
     private void setUpEnterTransition() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-            Slide slide = new Slide(Gravity.END);
+            Slide slide;
+
+            if (android.os.Build.VERSION.SDK_INT == android.os.Build.VERSION_CODES.LOLLIPOP) {
+                slide = new Slide(GravityCompat.getAbsoluteGravity(GravityCompat.END, getResources().getConfiguration().getLayoutDirection()));
+            }else {
+                slide = new Slide(Gravity.END);
+            }
+
             slide.excludeTarget(android.R.id.statusBarBackground, true);
             slide.excludeTarget(android.R.id.navigationBarBackground, true);
             getWindow().setEnterTransition(slide);
@@ -165,9 +173,24 @@ public class InfoActivity extends AppCompatActivity {
             }
 
         }
+
+        if (request.getTimestamp() != null) {
+            Long timestamp = (Long) request.getTimestamp();
+            if (timestamp < 0)
+                timestamp = Math.abs(timestamp);
+            SimpleDateFormat sdf = new SimpleDateFormat("LLL dd, yyyy h:m a", Locale.getDefault());
+            ((TextView) findViewById(R.id.text_request_date)).setText(sdf.format(new Date(timestamp)));
+        }
+
         if (request.getLocation_latlng() != null) {
             //TODO: Get the location name by latlng
-            textLocationName.setText("SET IN MAP");
+            textLocationName.setText("VIEW IN MAP");
+            textLocationName.setOnClickListener(view -> {
+                Intent intent = new Intent(this, MapsActivity.class);
+                intent.putExtra("latitude", request.getLocation_latlng().get("latitude"));
+                intent.putExtra("longitude", request.getLocation_latlng().get("longtitude"));
+                startActivity(intent);
+            });
         }else if (request.getLocationName() != null && !request.getLocationName().trim().equalsIgnoreCase("")) {
             textLocationName.setText(request.getLocationName());
         }

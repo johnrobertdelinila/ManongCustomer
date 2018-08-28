@@ -62,6 +62,31 @@ public class NavigationIconClickListener implements View.OnClickListener {
         height = displayMetrics.heightPixels;
     }
 
+    public void onClickMore(View view) {
+        navigationImageIcon = (ImageView) view;
+
+        // Cancel the existing animations
+        animatorSet.removeAllListeners();
+        animatorSet.end();
+        animatorSet.cancel();
+
+        int duration;
+
+        duration = 350;
+
+        navigationImageIcon.setImageDrawable(openIcon);
+        scrim.animate().alpha(0f).setDuration(duration);
+        scrim.setClickable(false);
+
+        ObjectAnimator animator = ObjectAnimator.ofFloat(sheet, "translationY", 0);
+        animator.setDuration(duration);
+        if (interpolator != null) {
+            animator.setInterpolator(interpolator);
+        }
+        animatorSet.play(animator);
+        animator.start();
+    }
+
     @Override
     public void onClick(View view) {
         navigationImageIcon = (ImageView) view;

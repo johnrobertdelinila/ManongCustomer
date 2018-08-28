@@ -37,7 +37,6 @@ import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.functions.FirebaseFunctionsException;
 
 import java.util.HashMap;
@@ -64,6 +63,7 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
     private AppBarLayout appBarLayout;
     private RelativeLayout temp_layout;
     private MaterialRatingBar providerRating;
+    private View scrim;
 
     private String providerPhoneNumber;
     private int kulayNgAlertDialogButton = 0;
@@ -78,6 +78,8 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_provider_profile);
 
+        sakuChan = null;
+
         providerPhotoUrl = getIntent().getStringExtra("providerPhotoUrl");
         providerId = getIntent().getStringExtra("providerId");
 
@@ -90,6 +92,8 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
             isWithoutTransition = true;
             fetchProviderProfile(providerId);
         }
+
+        scrim = findViewById(R.id.scrim);
 
         providerDisplayName = getIntent().getStringExtra("providerDisplayName");
 
@@ -107,6 +111,7 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
             getWindow().getSharedElementEnterTransition().addListener(new android.transition.Transition.TransitionListener() {
                 @Override
                 public void onTransitionStart(android.transition.Transition transition) {
+                    Log.e("TRANSITION", "START");
                 }
 
                 @Override
@@ -127,7 +132,7 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
 
                 @Override
                 public void onTransitionResume(android.transition.Transition transition) {
-
+                    Log.e("TRANSITION", "RESUME");
                 }
             });
         }
@@ -141,24 +146,17 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
             toolbar.setTitle(providerDisplayName);
         }
 
-        ProviderProfile providerProfile = (ProviderProfile) getIntent().getSerializableExtra("providerProfile");
         providerPhoneNumber = getIntent().getStringExtra("providerPhoneNumber");
         String requestKey = getIntent().getStringExtra("requestKey");
         String serviceKey = getIntent().getStringExtra("serviceKey");
 
-//        if (providerPhotoUrl == null && providerPhoneNumber == null) {
-//            fetchProviderProfile(providerId);
-//        }
-
         Bundle bundle = new Bundle();
         bundle.putString("providerId", providerId);
-        bundle.putString("providerPhotoUrl", providerPhotoUrl);
 
         GalleryFragment galleryFragment = new GalleryFragment();
         galleryFragment.setArguments(bundle);
 
         AboutFragment aboutFragment = new AboutFragment();
-        bundle.putSerializable("providerProfile", providerProfile);
         bundle.putString("requestKey", requestKey);
         bundle.putString("serviceKey", serviceKey);
         aboutFragment.setArguments(bundle);
@@ -189,8 +187,6 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
         });
 
         new Handler().postDelayed(() -> fab.show(), 810);
-
-//        findViewById(R.id.content_dynamic_durations).setVisibility(View.VISIBLE);
 
         mViewPager.setVisibility(View.VISIBLE);
 
@@ -227,6 +223,9 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
             dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
             AlertDialog outDialog = dialog.create();
             outDialog.show();
+            if (kulayNgAlertDialogButton == 0) {
+                kulayNgAlertDialogButton = getResources().getColor(R.color.colorPrimaryDark);
+            }
             outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(kulayNgAlertDialogButton);
             outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTypeface(Typeface.DEFAULT_BOLD);
             outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(kulayNgAlertDialogButton);
@@ -372,7 +371,7 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
                                     tabLayout.setTabTextColors(vibrantLightSwatch.getBodyTextColor(), vibrantLightSwatch.getTitleTextColor());
 
                                     toolbar.setTitleTextColor(vibrantLightSwatch.getBodyTextColor());
-                                    Drawable backArrow = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_arrow_back_black_24dp);
+                                    Drawable backArrow = ContextCompat.getDrawable(getApplicationContext(), R.drawable.manong_back);
                                     backArrow.setColorFilter(new PorterDuffColorFilter(vibrantLightSwatch.getBodyTextColor(), PorterDuff.Mode.MULTIPLY));
                                     toolbar.setNavigationIcon(backArrow);
                                     toolbar.setNavigationOnClickListener(view -> onBackPressed());
@@ -433,7 +432,7 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
     private void setupToolbar() {
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_black_24dp);
+        toolbar.setNavigationIcon(R.drawable.manong_back);
         toolbar.setNavigationOnClickListener(view -> onBackPressed());
     }
 
@@ -453,4 +452,22 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
         fab.animate().scaleX(1 - result).scaleY(1 - result).setDuration(0).start();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.e("HELLO", "PAUSE");
+        scrim.animate().alpha(0.6f).setDuration(0);
+    }
+
+    @Override
+    protected void onResume() {
+        scrim.animate().alpha(0).setDuration(0);
+        super.onResume();
+    }
+
+    @Override
+    protected void onStart() {
+        scrim.animate().alpha(0).setDuration(0);
+        super.onStart();
+    }
 }

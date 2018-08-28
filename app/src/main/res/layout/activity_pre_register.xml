@@ -16,11 +16,11 @@
         android:layout_height="wrap_content">
 
         <android.support.v7.widget.Toolbar
-            app:navigationIcon="@drawable/ic_arrow_back_black_24dp"
+            app:navigationIcon="@drawable/manong_back"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             style="@style/Widget.Manong.Toolbar.Ordinary"
             android:id="@+id/toolbar"
-            app:title="Email"
+            app:title="@string/manong_register_title"
             android:paddingStart="12dp"
             android:paddingLeft="12dp"
             android:paddingEnd="12dp"
@@ -50,7 +50,7 @@
                 android:fontFamily="@font/rubik_medium"
                 android:textSize="20sp"
                 android:textColor="@color/textColorPrimary"
-                android:text="Enter your email."
+                android:text="Enter your email to start"
                 android:layout_marginBottom="28dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -75,11 +75,9 @@
 
             </android.support.design.widget.TextInputLayout>
 
-            <ProgressBar
-                android:visibility="gone"
-                android:layout_margin="4dp"
-                android:id="@+id/email_progress"
-                android:layout_gravity="center_horizontal"
+            <TextView
+                android:visibility="invisible"
+                android:text=""
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 

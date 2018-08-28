@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.button.MaterialButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DividerItemDecoration;
@@ -43,14 +44,12 @@ public class AboutFragment extends Fragment {
     private Activity activity;
     private Context context;
     private String providerId;
-    private String providerPhotoUrl;
     private String requestKey;
     private String serviceKey;
 
     private ProgressBar progressBar;
-    private ArrayList<TextView> textViews;
-
     private RecyclerView recyclerView;
+    private MaterialButton bookButton;
 
     public AboutFragment() {
         // Required empty public constructor
@@ -85,11 +84,12 @@ public class AboutFragment extends Fragment {
 
     public class AboutViewHolder extends RecyclerView.ViewHolder {
 
-        TextView title;
+        TextView title, info;
 
         public AboutViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.text_title);
+            info = itemView.findViewById(R.id.text_info);
         }
     }
 
@@ -103,13 +103,12 @@ public class AboutFragment extends Fragment {
         context = getContext();
 
         providerId = getArguments().getString("providerId");
-        providerPhotoUrl = getArguments().getString("providerPhotoUrl");
-
         requestKey = getArguments().getString("requestKey");
         serviceKey = getArguments().getString("serviceKey");
 
         progressBar = view.findViewById(R.id.progress_bar);
         recyclerView = view.findViewById(R.id.recycler_view);
+        bookButton = view.findViewById(R.id.book_button);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(activity));
         recyclerView.addItemDecoration(new DividerItemDecoration(activity, DividerItemDecoration.VERTICAL));
@@ -127,8 +126,10 @@ public class AboutFragment extends Fragment {
                         profileRef = dataSnapshot.getRef().child("my_profile");
                         setUpRecylerView();
                         dataSnapshot.getRef().removeEventListener(this);
+                        view.findViewById(R.id.text_no_profile).setVisibility(View.GONE);
                     }else {
                         Log.e("TAKKI", "WALA");
+                        view.findViewById(R.id.text_no_profile).setVisibility(View.VISIBLE);
                         progressBar.setVisibility(View.GONE);
                     }
                 }
@@ -140,9 +141,15 @@ public class AboutFragment extends Fragment {
             });
         }
 
-        ProviderProfile providerProfile = (ProviderProfile) getArguments().getSerializable("providerProfile");
+        if (requestKey == null) {
+            view.findViewById(R.id.container_cut_button).setVisibility(View.GONE);
+        }
 
-//        bookButton.setOnClickListener(view1 -> savedBooked());
+        if (ProviderProfileActivity.sakuChan != null) {
+            changeButtonDesign(ProviderProfileActivity.sakuChan.getRgb(), ProviderProfileActivity.sakuChan.getBodyTextColor(), ProviderProfileActivity.sakuChan.getTitleTextColor());
+        }
+
+        bookButton.setOnClickListener(view1 -> savedBooked());
 
         return view;
     }
@@ -165,15 +172,21 @@ public class AboutFragment extends Fragment {
 
             @Override
             protected void onBindViewHolder(@NonNull AboutViewHolder holder, int position, @NonNull About about) {
-                holder.title.setText(about.title);
                 if (ProviderProfileActivity.sakuChan != null) {
                     holder.title.setTextColor(ColorStateList.valueOf(ProviderProfileActivity.sakuChan.getRgb()));
                 }
-            }
-
-            @Override
-            public int getItemCount() {
-                return super.getItemCount() + 1;
+                String title = "";
+                if (about.title.equalsIgnoreCase("about")) {
+                    title = "About";
+                }else if (about.title.equalsIgnoreCase("achievements")) {
+                    title = "My Achievements";
+                }else if (about.title.equalsIgnoreCase("address")) {
+                    title = "Address";
+                }else if (about.title.equalsIgnoreCase("services")) {
+                    title = "My Services";
+                }
+                holder.title.setText(title);
+                holder.info.setText(about.info);
             }
 
             @Override
@@ -188,75 +201,10 @@ public class AboutFragment extends Fragment {
 
     }
 
-    private void addView(String text, String title, LinearLayout.LayoutParams titleParams, LinearLayout.LayoutParams textParams, LinearLayout.LayoutParams viewParams) {
-
-        titleParams.setMargins(0, 5, 0, 35);
-        viewParams.setMargins(0, 20, 0, 20);
-
-        View view = new View(activity);
-        view.setBackground(ContextCompat.getDrawable(context, android.R.drawable.divider_horizontal_bright));
-        view.setLayoutParams(viewParams);
-
-        TextView textTitle = new TextView(activity);
-        textTitle.setText(title);
-        textTitle.setTextAppearance(context, R.style.ProfileTitleTextAppearance);
-        textTitle.setLayoutParams(titleParams);
-
-        textViews.add(textTitle);
-
-        TextView textView = new TextView(activity);
-        textView.setText(text);
-        textView.setPadding(10, 0, 0, 0);
-        textView.setTextAppearance(context, R.style.ProfileTextAppearance);
-        textView.setLayoutParams(titleParams);
-
-//        linearContainer.addView(view);
-//        linearContainer.addView(textTitle);
-//        linearContainer.addView(textView);
-
-    }
-
-    private void setupProviderProfile() {
-        profileRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                ProviderProfile providerProfile = dataSnapshot.getValue(ProviderProfile.class);
-                if (providerProfile != null) {
-                    setProviderValue(providerProfile);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private void setProviderValue(ProviderProfile providerProfile) {
-        textViews = new ArrayList<>();
-
-        LinearLayout.LayoutParams textview_params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        LinearLayout.LayoutParams view_params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-
-        if (providerProfile.getAbout() != null) {
-            addView(providerProfile.getAbout(), "About", textview_params, textview_params, view_params);
-        }
-        if (providerProfile.getServices() != null) {
-            addView(providerProfile.getServices(), "My Services", textview_params, textview_params, view_params);
-        }
-        if (providerProfile.getAchievements() != null) {
-            addView(providerProfile.getAchievements(), "My Achievements", textview_params, textview_params, view_params);
-        }
-        if (providerProfile.getAddress() != null) {
-            addView(providerProfile.getAddress(), "Address", textview_params, textview_params, view_params);
-        }
-    }
-
     private void changeButtonDesign(int tintColor, int textColor, int rippleColor) {
-//        bookButton.setBackgroundTintList(ColorStateList.valueOf(tintColor));
-//        bookButton.setTextColor(ColorStateList.valueOf(textColor));
-//        bookButton.setRippleColor(ColorStateList.valueOf(rippleColor));
+        bookButton.setBackgroundTintList(ColorStateList.valueOf(tintColor));
+        bookButton.setTextColor(ColorStateList.valueOf(textColor));
+        bookButton.setRippleColor(ColorStateList.valueOf(rippleColor));
     }
 
     private void savedBooked() {

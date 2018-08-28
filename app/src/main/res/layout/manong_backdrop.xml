@@ -6,7 +6,7 @@
         style="@style/Widget.Manong.Button.TextButton.Bold"
         android:clickable="true"
         android:focusable="true"
-        android:foreground="?attr/selectableItemBackgroundBorderless"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/manong_search_label" />
@@ -23,7 +23,7 @@
         android:id="@+id/nav_request_button"
         android:clickable="true"
         android:focusable="true"
-        android:foreground="?attr/selectableItemBackgroundBorderless"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/manong_request_label" />

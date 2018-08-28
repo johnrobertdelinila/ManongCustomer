@@ -14,7 +14,7 @@
         android:layout_height="wrap_content">
 
         <android.support.v7.widget.Toolbar
-            app:navigationIcon="@drawable/manong_close_menu"
+            app:navigationIcon="@drawable/manong_back"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             style="@style/Widget.Manong.Toolbar.Ordinary"
             android:background="@color/serviceGridBackgroundColor"
@@ -147,6 +147,9 @@
                     app:errorEnabled="true"
                     app:hintEnabled="true"
                     app:hintAnimationEnabled="true">
+
+                    <!--app:boxCornerRadiusTopStart="0dp"-->
+                    <!--app:boxCornerRadiusTopEnd="0dp"-->
 
                     <android.support.design.widget.TextInputEditText
                         android:id="@+id/phone_edit_text"

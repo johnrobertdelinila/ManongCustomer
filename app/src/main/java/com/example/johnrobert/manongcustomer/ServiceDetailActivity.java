@@ -7,10 +7,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,12 +16,8 @@ import android.support.annotation.Nullable;
 import android.support.design.button.MaterialButton;
 import android.support.design.card.MaterialCardView;
 import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPropertyAnimatorListener;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
@@ -42,7 +35,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.github.florent37.shapeofview.shapes.CutCornerView;
 import com.github.glomadrian.materialanimatedswitch.MaterialAnimatedSwitch;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -59,7 +51,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -84,7 +75,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
     private RelativeLayout mapContainer;
     private ImageView transparentImage;
     private NestedScrollView rootView;
-    private MaterialCardView cardMap;
+    private MaterialCardView cardMap, cardPlace;
     private MaterialButton btnMap;
     private MaterialAnimatedSwitch switchLocation;
     private CollapsingToolbarLayout collapsingToolbarLayout;
@@ -95,6 +86,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
     private Location mLastLocation;
     private Marker marker;
     private String locationName = null;
+    private int image;
 
     private final View.OnTouchListener touchListener = new View.OnTouchListener() {
         @Override
@@ -133,11 +125,28 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
             checklistContainer = findViewById(R.id.checklist_container);
             item = getIntent().getParcelableExtra(INTENT_EXTRA_ITEM);
             collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
+            cardPlace = findViewById(R.id.place_autocomplete_fragment_container);
 
             Toolbar toolbar = findViewById(R.id.toolbar);
             setSupportActionBar(toolbar);
             toolbar.setNavigationIcon(android.support.v7.appcompat.R.drawable.abc_ic_ab_back_material);
             toolbar.setNavigationOnClickListener(view -> onBackPressed());
+
+            if (item.imageRes == R.drawable.plumbing_filipino) {
+                image = R.drawable.plumbing_filipino_hd;
+            }else if (item.imageRes == R.drawable.laba_filipina) {
+                image = R.drawable.laba_flipina_hd;
+            }else if (item.imageRes == R.drawable.reapairing_filipino) {
+                image = R.drawable.reapairing_filipino_hd;
+            }else if (item.imageRes == R.drawable.filipino_electrician) {
+                image = R.drawable.filipino_electrician_hd;
+            }else if (item.imageRes == R.drawable.cleaning_filipina) {
+                image = R.drawable.cleaning_filipina_hd;
+            }else if (item.imageRes == R.drawable.pinoy_taga_pintor) {
+                image = R.drawable.pinoy_taga_pintor_hd;
+            } else {
+                image = item.imageRes;
+            }
 
             Bitmap bitmapImage = BitmapFactory.decodeResource(getResources(), item.imageRes);
             Palette.from(bitmapImage).generate(palette -> {
@@ -162,11 +171,11 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
                 }
             });
 
+            setupViews();
+
         }catch (Exception e) {
             Log.e("ServiceDetailActivity", e.getMessage());
         }
-
-        setupViews();
 
         transparentImage = findViewById(R.id.transparent_image);
         rootView = findViewById(R.id.content_dynamic_durations);
@@ -186,20 +195,29 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
 
         ImageView allShareRowImage = findViewById(R.id.all_element_share_image);
 
-        imageView.setImageResource(item.imageRes);
+        imageView.setImageResource(image);
 
 //        Bitmap bitmap = ResourceUtil.getBitmap(this, item.imageRes);
 //        RoundedBitmapDrawable circularBitmapDrawable = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
 //        circularBitmapDrawable.setCircular(true);
 
         allShareRowImage.setImageDrawable(getResources().getDrawable(R.drawable.ic_keyboard_arrow_up_black_24dp));
-        TransitionUtils.setSharedElementEnterTransitionEndListenerCompat(getWindow(), transition -> {
+
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            TransitionUtils.setSharedElementEnterTransitionEndListenerCompat(getWindow(), transition -> {
+                collapsingToolbarLayout.setTitleEnabled(true);
+                collapsingToolbarLayout.setTitle(item.title);
+                setUpMap();
+                checklistContainer.setVisibility(FrameLayout.VISIBLE);
+                mapContainer.setVisibility(FrameLayout.VISIBLE);
+            });
+        }else {
             collapsingToolbarLayout.setTitleEnabled(true);
             collapsingToolbarLayout.setTitle(item.title);
             setUpMap();
             checklistContainer.setVisibility(FrameLayout.VISIBLE);
             mapContainer.setVisibility(FrameLayout.VISIBLE);
-        });
+        }
 
         ((TextView) findViewById(R.id.all_content_element_share_text)).setText(item.title + " checklist ");
 
@@ -242,9 +260,13 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
             bundle.putSerializable("service", service);
             intent.putExtras(bundle);
 
-            ActivityOptionsCompat optionsCompat =
-                    ActivityOptionsCompat.makeSceneTransitionAnimation(ServiceDetailActivity.this, cardView, getString(R.string.transition_name_all_element_share));
-            ActivityCompat.startActivity(ServiceDetailActivity.this, intent, optionsCompat.toBundle());
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                ActivityOptionsCompat optionsCompat =
+                        ActivityOptionsCompat.makeSceneTransitionAnimation(ServiceDetailActivity.this, cardView, getString(R.string.transition_name_all_element_share));
+                ActivityCompat.startActivity(ServiceDetailActivity.this, intent, optionsCompat.toBundle());
+            }else {
+                startActivity(intent);
+            }
 
         });
     }
@@ -366,8 +388,10 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
 
         switchLocation.setOnCheckedChangeListener(isChecked -> {
             if (isChecked) {
+                cardPlace.setVisibility(View.GONE);
                 setUpLocation();
             }else {
+                cardPlace.setVisibility(View.VISIBLE);
                 if (googleApiClient != null && googleApiClient.isConnected()) {
                     googleApiClient.disconnect();
                 }
@@ -385,15 +409,19 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
 
         mMap.setOnMapClickListener(latLng -> {
             if (googleApiClient != null && googleApiClient.isConnected()) {
-                markerOptions.position(latLng);
-                if (marker != null) {
-                    marker.remove();
+                if (mLastLocation != null) {
+                    markerOptions.position(latLng);
+                    if (marker != null) {
+                        marker.remove();
+                    }
+                    marker = mMap.addMarker(markerOptions);
+                    mLastLocation.setLatitude(latLng.latitude);
+                    mLastLocation.setLongitude(latLng.longitude);
+                }else {
+                    Toast.makeText(this, "Cannot get your current location. Please make sure that your location is turned on.", Toast.LENGTH_LONG).show();
                 }
-                marker = mMap.addMarker(markerOptions);
-                mLastLocation.setLatitude(latLng.latitude);
-                mLastLocation.setLongitude(latLng.longitude);
             }else {
-                Snackbar.make(findViewById(R.id.content_dynamic_durations), "You need to turn on location to pin a map.", Snackbar.LENGTH_LONG).show();
+                Toast.makeText(this, "You need to turn on location to drop a marker in map.", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -407,14 +435,14 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
             @Override
             public void onPlaceSelected(Place place) {
                 // TODO: Get info about the selected place.
-                Toast.makeText(ServiceDetailActivity.this, place.getAddress(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ServiceDetailActivity.this, place.getAddress(), Toast.LENGTH_LONG).show();
                 locationName = (String) place.getAddress();
             }
 
             @Override
             public void onError(Status status) {
                 // TODO: Handle the error.
-                Toast.makeText(ServiceDetailActivity.this, status.getStatusMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ServiceDetailActivity.this, status.getStatusMessage(), Toast.LENGTH_LONG).show();
             }
         });
 

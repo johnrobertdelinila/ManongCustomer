@@ -16,7 +16,7 @@
         android:layout_height="wrap_content">
 
         <android.support.v7.widget.Toolbar
-            app:navigationIcon="@drawable/ic_arrow_back_black_24dp"
+            app:navigationIcon="@drawable/manong_back"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             style="@style/Widget.Manong.Toolbar.Ordinary"
             android:id="@+id/toolbar"
@@ -124,7 +124,36 @@
 
                     <TextView
                         android:textAppearance="@style/SettingsTextAppearance"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackgroundBorderless"
                         android:id="@+id/text_info_location"
+                        android:text="No available location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:visibility="invisible"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="14dp"
+                        app:srcCompat="@drawable/manong_timer"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp" />
+
+                    <TextView
+                        android:textAppearance="@style/SettingsTextAppearance"
+                        android:id="@+id/text_request_date"
                         android:text="No available location"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />

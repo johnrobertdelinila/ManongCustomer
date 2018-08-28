@@ -7,6 +7,7 @@ import android.support.design.button.MaterialButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.view.GravityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -36,7 +37,6 @@ public class PreRegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_pre_register);
         setUpToolbar();
 
-        progressBar = findViewById(R.id.email_progress);
         TextInputEditText emailEditText = findViewById(R.id.email_edit_text);
         TextInputLayout emailTextInput = findViewById(R.id.email_text_input);
         nextButton = findViewById(R.id.next_button);
@@ -87,23 +87,19 @@ public class PreRegisterActivity extends AppCompatActivity {
     }
 
     private void setUpEnterTransition() {
-//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-//            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-//            Slide slide = new Slide(Gravity.END);
-//            slide.excludeTarget(android.R.id.statusBarBackground, true);
-//            slide.excludeTarget(android.R.id.navigationBarBackground, true);
-//            getWindow().setEnterTransition(slide);
-//        }
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-            Slide slide = new Slide(Gravity.END);
+            Slide slide;
+
+            if (android.os.Build.VERSION.SDK_INT == android.os.Build.VERSION_CODES.LOLLIPOP) {
+                slide = new Slide(GravityCompat.getAbsoluteGravity(GravityCompat.END, getResources().getConfiguration().getLayoutDirection()));
+            }else {
+                slide = new Slide(Gravity.END);
+            }
+
             slide.excludeTarget(android.R.id.statusBarBackground, true);
             slide.excludeTarget(android.R.id.navigationBarBackground, true);
-
-//            Slide slide1 = new Slide(Gravity.START);
-
             getWindow().setEnterTransition(slide);
-//            getWindow().setExitTransition(slide1);
         }
     }
 
@@ -119,7 +115,8 @@ public class PreRegisterActivity extends AppCompatActivity {
                             // multiple auth provider is not supported yet.
 //                            Toast.makeText(this, "This email is already registered in the app.", Toast.LENGTH_LONG).show();
                             showProgressbar(false);
-                            Snackbar.make(findViewById(R.id.rootContainer), "This Email Address is already used in the app.", 2750).show();
+//                            Snackbar.make(findViewById(R.id.rootContainer), "Email Address is already used in the app.", 2750).show();
+                            Toast.makeText(this, "Email address is already in used. Please try another email.", Toast.LENGTH_LONG).show();
                         } else {
                             // Register account.
                             Log.e("PreRegisterActivity", "You can now register this account.");
@@ -145,8 +142,6 @@ public class PreRegisterActivity extends AppCompatActivity {
 
     private void showProgressbar(boolean show) {
         if (show) {
-//            progressBar.setVisibility(ProgressBar.VISIBLE);
-//            nextButton.setVisibility(MaterialButton.GONE);
             nextButton.setEnabled(false);
             nextButton.setText(R.string.manong_button_loading);
         }else {

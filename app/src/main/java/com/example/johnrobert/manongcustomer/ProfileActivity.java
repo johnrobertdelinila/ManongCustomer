@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.design.button.MaterialButton;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.view.GravityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
@@ -137,7 +138,6 @@ public class ProfileActivity extends AppCompatActivity {
                 test++;
             }
 
-            Log.e("ORIGINAL EMAIL", originalProviderEmail);
 
             if (providerId.equalsIgnoreCase("password")) {
                 changePassButton.setVisibility(MaterialButton.VISIBLE);
@@ -178,7 +178,8 @@ public class ProfileActivity extends AppCompatActivity {
             android.app.AlertDialog.Builder dialog = new android.app.AlertDialog.Builder(ProfileActivity.this);
             dialog.setTitle("Logout");
             dialog.setMessage("Are you sure, you want to logout?");
-            dialog.setPositiveButton("YES", (dialogInterface, i) -> AuthUI.getInstance()
+            dialog.setPositiveButton("YES", (dialogInterface, i) ->
+                    AuthUI.getInstance()
                     .signOut(ProfileActivity.this)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
@@ -827,11 +828,17 @@ public class ProfileActivity extends AppCompatActivity {
     private void setUpEnterTransition() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-            Slide slide = new Slide(Gravity.END);
+            Slide slide;
+            Slide slide1;
+            if (android.os.Build.VERSION.SDK_INT == android.os.Build.VERSION_CODES.LOLLIPOP) {
+                slide = new Slide(GravityCompat.getAbsoluteGravity(GravityCompat.END, getResources().getConfiguration().getLayoutDirection()));
+                slide1 = new Slide(GravityCompat.getAbsoluteGravity(GravityCompat.START, getResources().getConfiguration().getLayoutDirection()));
+            }else {
+                slide = new Slide(Gravity.END);
+                slide1 = new Slide(Gravity.START);
+            }
             slide.excludeTarget(android.R.id.statusBarBackground, true);
             slide.excludeTarget(android.R.id.navigationBarBackground, true);
-
-            Slide slide1 = new Slide(Gravity.START);
 
             getWindow().setEnterTransition(slide);
             getWindow().setExitTransition(slide1);

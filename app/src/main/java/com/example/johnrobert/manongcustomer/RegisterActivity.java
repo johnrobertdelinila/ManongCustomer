@@ -1,11 +1,15 @@
 package com.example.johnrobert.manongcustomer;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
 import android.support.design.button.MaterialButton;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.view.GravityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -14,21 +18,23 @@ import android.transition.Slide;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.alimuzaffar.lib.pin.PinEntryEditText;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
-import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -40,9 +46,11 @@ public class RegisterActivity extends AppCompatActivity {
     private TextInputEditText emailEditText, fullNameEditText, phoneEditText, passwordEditText, confirmEditText;
     private TextInputLayout emailTextInput, fullNameTextInput, phoneTextInput, passwordTextInput, confirmTextInput;
     private MaterialButton register_button;
+    private MaterialDialog loading;
 
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
     private PhoneAuthProvider.ForceResendingToken mResendToken;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     private String mVerificationId;
     private String email;
@@ -66,11 +74,12 @@ public class RegisterActivity extends AppCompatActivity {
         mCallbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             @Override
             public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
-                createEmailAndPassword(phoneAuthCredential);
+                createEmailAndPassword(phoneAuthCredential, null, null, null, null, null);
             }
 
             @Override
             public void onVerificationFailed(FirebaseException e) {
+                loading.dismiss();
                 if (e instanceof FirebaseAuthInvalidCredentialsException) {
                     // Invalid request
                     Toast.makeText(RegisterActivity.this, "Invalid Request: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -91,6 +100,7 @@ public class RegisterActivity extends AppCompatActivity {
                 mVerificationId = s;
                 mResendToken = forceResendingToken;
 
+                loading.dismiss();
                 Toast.makeText(RegisterActivity.this, "The code has been sent your phone number.", Toast.LENGTH_LONG).show();
                 showPromptVerificationCode();
             }
@@ -102,6 +112,8 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
+            loading.show();
+
             if (!isEmpty(phoneEditText.getText())) {
                 String phoneNumber = "+63" + Objects.requireNonNull(phoneEditText.getText()).toString().trim();
                 PhoneAuthProvider.getInstance().verifyPhoneNumber(
@@ -112,23 +124,72 @@ public class RegisterActivity extends AppCompatActivity {
                         mCallbacks
                 );
             }else {
-                createEmailAndPassword(null);
+                createEmailAndPassword(null, null, null, null, null, null);
             }
+
         });
 
     }
 
     private void showPromptVerificationCode() {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this, R.style.ManongDialogTheme);
-        dialog.setTitle("Phone Number Validation");
-        dialog.setMessage("Enter the verification code that been sent to your device.");
-        dialog.setCancelable(false);
-        dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle("Phone Validation");
+        dialog.setMessage("Enter the 6-digit code we sent to +63" + phoneEditText.getText());
+
+//        dialog.setCancelable(false);
+
         View view = getLayoutInflater().inflate(R.layout.layout_validation_code, null);
         PinEntryEditText editVerificationCode = view.findViewById(R.id.text_verification_code);
+        MaterialButton phoneButton = view.findViewById(R.id.phone_button);
+        MaterialButton resendButton = view.findViewById(R.id.resend_button);
+        LinearLayout linearLayout = view.findViewById(R.id.linearLayout);
+        ProgressBar progressBar = view.findViewById(R.id.progress_bar);
         dialog.setView(view);
-        editVerificationCode.setOnPinEnteredListener(str -> verifyPhoneNumberWithCode(str.toString(), editVerificationCode));
+
+        new Handler().postDelayed(() -> {
+            if (resendButton != null) {
+                resendButton.setEnabled(true);
+                resendButton.setTextColor(getResources().getColor(R.color.textColorPrimary));
+                resendButton.setText("RESEND CODE");
+            }
+        }, 20000);
+
+        new CountDownTimer(20000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                if (resendButton != null) {
+                    resendButton.setText("RESEND CODE IN " + millisUntilFinished / 1000);
+                }
+            }
+
+            public void onFinish() {
+                if (resendButton != null) {
+                    resendButton.setEnabled(true);
+                    resendButton.setTextColor(getResources().getColor(R.color.textColorPrimary));
+                    resendButton.setText("RESEND CODE");
+                }
+            }
+        }.start();
+        editVerificationCode.setOnPinEnteredListener(str -> phoneButton.setEnabled(true));
+        editVerificationCode.setOnKeyListener((view1, i, keyEvent) -> {
+            if (editVerificationCode.getText().length() < 6) {
+                phoneButton.setEnabled(false);
+            }
+            return false;
+        });
+
         AlertDialog outDialog = dialog.create();
+
+        phoneButton.setOnClickListener(view1 -> {
+            linearLayout.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+            verifyPhoneNumberWithCode(editVerificationCode.getText().toString(), editVerificationCode, phoneButton, linearLayout, progressBar, outDialog);
+        });
+        resendButton.setOnClickListener(view1 -> {
+            outDialog.dismiss();
+            resendVerificationCode("+63" + phoneEditText.getText().toString(), mResendToken);
+            loading.show();
+        });
+
         outDialog.show();
         outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorControlActivated));
         outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTypeface(Typeface.DEFAULT_BOLD);
@@ -146,6 +207,13 @@ public class RegisterActivity extends AppCompatActivity {
         confirmEditText = findViewById(R.id.confirmpassword_edit_text);
         confirmTextInput = findViewById(R.id.confirmpassword_text_input);
         register_button = findViewById(R.id.register_button);
+
+        MaterialDialog.Builder builder = new MaterialDialog.Builder(RegisterActivity.this)
+                .content(getString(R.string.manong_please_wait))
+                .progress(true, 0);
+        loading = builder.build();
+
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
     }
 
     private boolean isFormValid() {
@@ -251,44 +319,29 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void setUpEnterTransition() {
-//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-//            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-//            Slide slide = new Slide(Gravity.END);
-//            slide.excludeTarget(android.R.id.statusBarBackground, true);
-//            slide.excludeTarget(android.R.id.navigationBarBackground, true);
-//            getWindow().setEnterTransition(slide);
-//        }
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-            Slide slide = new Slide(Gravity.END);
+            Slide slide;
+
+            if (android.os.Build.VERSION.SDK_INT == android.os.Build.VERSION_CODES.LOLLIPOP) {
+                slide = new Slide(GravityCompat.getAbsoluteGravity(GravityCompat.END, getResources().getConfiguration().getLayoutDirection()));
+            }else {
+                slide = new Slide(Gravity.END);
+            }
+
             slide.excludeTarget(android.R.id.statusBarBackground, true);
             slide.excludeTarget(android.R.id.navigationBarBackground, true);
-
-            Slide slide1 = new Slide(Gravity.START);
-
             getWindow().setEnterTransition(slide);
-            getWindow().setExitTransition(slide1);
         }
     }
 
-    private void verifyPhoneNumberWithCode(String code, PinEntryEditText codeInput) {
+    private void verifyPhoneNumberWithCode(String code, PinEntryEditText codeInput, MaterialButton phoneButton,
+                                           LinearLayout linearLayout, ProgressBar progressBar, AlertDialog outDialog) {
+
         PhoneAuthCredential credential = PhoneAuthProvider.getCredential(mVerificationId, code);
-        MainActivity.mAuth.signInWithCredential(credential)
-                .addOnSuccessListener(authResult -> authResult.getUser().delete()
-                        .addOnCompleteListener(task -> {
-                            // Successfully deleted the user and validate the Phone Number.
-                            // Register the user.
-                            Log.e(activityName, "Successfully deleted the user and validate the Phone Number.");
-                            createEmailAndPassword(credential);
-                        }))
-                .addOnFailureListener(e -> {
-                    if (e instanceof FirebaseAuthInvalidCredentialsException) {
-                        Toast.makeText(RegisterActivity.this, "The verification code entered was invalid.", Toast.LENGTH_LONG).show();
-                    }else {
-                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                    codeInput.setText(null);
-                });
+
+        createEmailAndPassword(credential, codeInput, phoneButton, linearLayout, progressBar,outDialog);
+
     }
 
     private void resendVerificationCode(String phoneNumber, PhoneAuthProvider.ForceResendingToken mResendToken) {
@@ -302,40 +355,71 @@ public class RegisterActivity extends AppCompatActivity {
         );
     }
 
-    private void createEmailAndPassword(PhoneAuthCredential credential) {
+    private void createEmailAndPassword(PhoneAuthCredential credential, PinEntryEditText codeInput, MaterialButton phoneButton,
+                                        LinearLayout linearLayout, ProgressBar progressBar, AlertDialog outDialog) {
         MainActivity.mAuth.createUserWithEmailAndPassword(emailEditText.getText().toString().trim(), passwordEditText.getText().toString().trim())
                 .addOnSuccessListener(authResult -> {
                     // Successfully created a user.
                     Log.e(activityName, "Successfully created a user.");
                     FirebaseUser user = authResult.getUser();
-                    UserProfileChangeRequest profileUpdate = new UserProfileChangeRequest.Builder()
-                            .setDisplayName(fullNameEditText.getText().toString())
-                            .build();
-                    user.updateProfile(profileUpdate).addOnCompleteListener(task -> {
-                        if (!task.isSuccessful() && task.getException() != null) {
-                            Toast.makeText(this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                        }else {
-                            // Successfully updated the display name of the user.
-                            Log.e(activityName, "Successfully updated the display name of the user.");
-                            // Now update the phone number of the user.
-                            if (credential != null) {
-                                user.updatePhoneNumber(credential).addOnCompleteListener(task2 -> {
-                                    if (!task2.isSuccessful() && task2.getException() != null) {
-                                        Toast.makeText(this, task2.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                                    }else {
-                                        // Successfully updated the phone number of the user too.
-                                        Log.e(activityName, "Successfully updated the phone number of the user too.");
-                                        // Add the excess information of the user to the database.
-                                        updateCustomerAccount(user.getUid());
+
+                    if (credential != null && phoneEditText.getText() != null && phoneEditText.getText().length() > 0) {
+                        user.updatePhoneNumber(credential).addOnCompleteListener(task2 -> {
+                            if (!task2.isSuccessful() && task2.getException() != null) {
+                                Log.e(activityName, task2.getException().getMessage());
+                                user.delete();
+
+                                if (task2.getException() instanceof FirebaseAuthInvalidCredentialsException) {
+                                    if (phoneButton != null) {
+                                        phoneButton.setEnabled(false);
                                     }
-                                });
+                                    Toast.makeText(RegisterActivity.this, "The verification code entered was invalid. Please try again.", Toast.LENGTH_LONG).show();
+                                }else {
+                                    Toast.makeText(this, task2.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                                if (codeInput != null) {
+                                    codeInput.setText(null);
+                                }
+                                if (linearLayout != null && progressBar != null) {
+                                    linearLayout.setVisibility(View.VISIBLE);
+                                    progressBar.setVisibility(View.GONE);
+                                }
                             }else {
-                                updateCustomerAccount(user.getUid());
+                                // Successfully updated the phone number of the user too.
+
+                                if (outDialog != null) {
+                                    outDialog.dismiss();
+                                }
+                                loading.show();
+                                Log.e(activityName, "Successfully updated the phone number of the user.");
+                                updateDisplayName(user);
+                                // Add the excess information of the user to the database.
                             }
-                        }
-                    });
+                        });
+                    }else {
+                        updateDisplayName(user);
+                    }
+
                 })
-                .addOnFailureListener(e -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    loading.dismiss();
+                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+    }
+
+    private void updateDisplayName(FirebaseUser user) {
+        UserProfileChangeRequest profileUpdate = new UserProfileChangeRequest.Builder()
+                .setDisplayName(fullNameEditText.getText().toString())
+                .build();
+        user.updateProfile(profileUpdate).addOnCompleteListener(task -> {
+            if (!task.isSuccessful() && task.getException() != null) {
+                user.delete();
+                loading.dismiss();
+                Toast.makeText(this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+            }else {
+                updateCustomerAccount(user.getUid());
+            }
+        });
     }
 
     private void updateCustomerAccount(String uid) {
@@ -344,17 +428,24 @@ public class RegisterActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         // Successfully updated the user.
                         // Go to next activity.
-                        Toast.makeText(this, "Registered successfully.", Toast.LENGTH_SHORT).show();
+                        logEventSignUp(uid);
+                        Toast.makeText(this, "Welcome to One Tap Manong.", Toast.LENGTH_SHORT).show();
                         Intent homeIntent = new Intent(this, ManongActivity.class);
                         finish();
                         startActivity(homeIntent);
-//                        showProgressbar(false, loginButton);
+                        loading.dismiss();
                     }else {
                         // Show error.
+                        loading.dismiss();
                         Toast.makeText(RegisterActivity.this, Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
-//                        showProgressbar(false, loginButton);
                     }
                 });
+    }
+
+    private void logEventSignUp(String uid) {
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.VALUE, uid);
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SIGN_UP, bundle);
     }
 
 }

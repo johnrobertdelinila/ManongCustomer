@@ -193,7 +193,7 @@ public class MessageFragment extends Fragment {
                 intent.putExtra("isSlideTransition", false);
                 intent.putExtra("providerId", customer.getProviderId());
 
-                getProviderProfile(customer.getProviderId(), intentProviderProfile, intent);
+//                getProviderProfile(customer.getProviderId(), intentProviderProfile, intent);
 
                 intentProviderProfile.putExtra("providerId", customer.getProviderId());
                 holder.profile_picture.setOnClickListener(view -> {
@@ -240,21 +240,21 @@ public class MessageFragment extends Fragment {
         firebaseAdapter.startListening();
     }
 
-    private void getProviderProfile(String providerId, Intent intent, Intent intent2) {
-        ManongActivity.providerRef.child(providerId).child("my_profile").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                ProviderProfile providerProfile = dataSnapshot.getValue(ProviderProfile.class);
-                intent.putExtra("providerProfile", providerProfile);
-                intent2.putExtra("providerProfile", providerProfile);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-    }
+//    private void getProviderProfile(String providerId, Intent intent, Intent intent2) {
+//        ManongActivity.providerRef.child(providerId).child("my_profile").addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                ProviderProfile providerProfile = dataSnapshot.getValue(ProviderProfile.class);
+//                intent.putExtra("providerProfile", providerProfile);
+//                intent2.putExtra("providerProfile", providerProfile);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+//    }
 
     private void setPhotoAndDisplayName(String providerId, CircleImageView profile_picture, TextView text_provider_name,
                                         CardView temp_image, Intent intent, Intent intentProvider) {
@@ -297,6 +297,9 @@ public class MessageFragment extends Fragment {
                                         }
                                     })
                                     .into(profile_picture);
+                        }else {
+                            temp_image.setVisibility(CardView.GONE);
+                            profile_picture.setVisibility(CircleImageView.VISIBLE);
                         }
                         if (displayName != null) {
                             text_provider_name.setText(displayName);
@@ -326,6 +329,8 @@ public class MessageFragment extends Fragment {
                     setPhotoAndDisplayName(getProviderId, profile_picture, text_provider_name, temp_image, intent, intentProvider);
                     setProviderInformation(getProviderId, temp_image, messageLinkKey, text_last_message, text_last_date, text_provider_name, profile_picture, intentProvider);
                 }else {
+                    text_last_message.setText("");
+                    text_last_date.setText("");
                     setPhotoAndDisplayName(getProviderId, profile_picture, text_provider_name, temp_image, intent, intentProvider);
                 }
             }

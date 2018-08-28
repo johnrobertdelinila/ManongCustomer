@@ -5,16 +5,13 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.card.MaterialCardView;
+import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
-import android.transition.Fade;
 import android.transition.Slide;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,18 +31,13 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.functions.FirebaseFunctionsException;
-import com.twitter.sdk.android.core.models.Card;
-import com.twitter.sdk.android.core.models.Image;
 
 import java.text.DecimalFormat;
 import java.util.HashMap;
@@ -56,16 +48,16 @@ import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 
 public class ChildActivity extends AppCompatActivity implements ChildEventListener {
 
-    public static final String ANONYMOUS = "Anonymous";
-    private String requestDate;
-
     private FirebaseUser user = ManongActivity.mUser;
 
     private DatabaseReference quotesRef = MainActivity.rootRef.child("Quotes");
 
     private LinearLayout rootContainer;
 
+    public static final String ANONYMOUS = "Anonymous";
+    private String requestDate;
     private Request request;
+    private boolean isDoneShowing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,22 +71,6 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
 //        requestRef.child(request.getKey()).child("quotes").addChildEventListener(this);
 
         setUpToolbar();
-
-        if (request != null) {
-            ((TextView) findViewById(R.id.text_service_name)).setText(request.getServiceName());
-
-            for (String key: request.getQuestionsAndAnswers().keySet()) {
-                if (key.substring(2).equalsIgnoreCase("When do you need it?") || key.substring(2).toLowerCase().startsWith("when do you need")) {
-                    String requestID = generateRequestId(request.getQuestionsAndAnswers().get(key), request.getServiceName(), request.getKey());
-                    ((TextView) findViewById(R.id.text_service_key)).setText(requestID);
-                    requestDate = request.getQuestionsAndAnswers().get(key);
-                    break;
-                }
-            }
-
-            generateServiceProvider(request);
-
-        }
 
         Intent intent = new Intent(ChildActivity.this, InfoActivity.class);
 
@@ -110,6 +86,32 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
 
         cancelledListener(request);
 
+        if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+            onEnterAnimationComplete();
+        }
+
+    }
+
+    @Override
+    public void onEnterAnimationComplete() {
+        super.onEnterAnimationComplete();
+
+        if (request != null && !isDoneShowing) {
+            isDoneShowing = true;
+            ((TextView) findViewById(R.id.text_service_name)).setText(request.getServiceName());
+
+            for (String key: request.getQuestionsAndAnswers().keySet()) {
+                if (key.substring(2).equalsIgnoreCase("When do you need it?") || key.substring(2).toLowerCase().startsWith("when do you need")) {
+                    String requestID = generateRequestId(request.getQuestionsAndAnswers().get(key), request.getServiceName(), request.getKey());
+                    ((TextView) findViewById(R.id.text_service_key)).setText(requestID);
+                    requestDate = request.getQuestionsAndAnswers().get(key);
+                    break;
+                }
+            }
+
+            generateServiceProvider(request);
+
+        }
     }
 
     private void cancelledListener(Request request) {
@@ -179,6 +181,16 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
             MaterialRatingBar rating = cardView.findViewById(R.id.service_provider_ratingbar);
             ImageView booked = cardView.findViewById(R.id.bookmark_icon);
 
+            cardView.setAlpha(0);
+            long animationDelay = 700L + (iterator + 1) * 25;
+            cardView.animate()
+                    .alpha(1)
+                    .translationY(0)
+                    .setDuration(200)
+                    .setInterpolator(new LinearOutSlowInInterpolator())
+                    .setStartDelay(animationDelay)
+                    .start();
+
             if (request.getBooked() != null && request.getBooked().get("bookedProvider").equals(providerId)) {
                 booked.setVisibility(ImageView.VISIBLE);
             }
@@ -212,8 +224,6 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
             }
 
             Intent intent = new Intent(this, MessageProviderActivity.class);
-
-            getProviderProfile(providerId, intentProviderProfile, intent);
 
             if (user != null) {
                 String messageLinkKey = user.getUid() + providerId;
@@ -294,8 +304,6 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
 
         Intent intent = new Intent(this, MessageProviderActivity.class);
 
-        getProviderProfile(providerId, intentProviderProfile, intent);
-
         if (user != null) {
             String messageLinkKey = user.getUid() + providerId;
             intent.putExtra("messageLinkKey", messageLinkKey);
@@ -326,22 +334,6 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Toast.makeText(ChildActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void getProviderProfile(String providerId, Intent intent, Intent intent2) {
-        ManongActivity.providerRef.child(providerId).child("my_profile").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                ProviderProfile providerProfile = dataSnapshot.getValue(ProviderProfile.class);
-                intent.putExtra("providerProfile", providerProfile);
-                intent2.putExtra("providerProfile", providerProfile);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
             }
         });
     }
@@ -393,6 +385,9 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
                                     }
                                 })
                                 .into(profileImage);
+                    }else {
+                        profileImage.setVisibility(CircleImageView.VISIBLE);
+                        temp_image.setVisibility(CardView.GONE);
                     }
 
                     intent.putExtra("providerName", displayName);
@@ -464,5 +459,13 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
     @Override
     public void onCancelled(@NonNull DatabaseError databaseError) {
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        findViewById(R.id.cancelled_container).setVisibility(RelativeLayout.GONE);
+        findViewById(R.id.second_container).setVisibility(RelativeLayout.GONE);
+        findViewById(R.id.scroll_provider_container).setVisibility(ScrollView.GONE);
     }
 }

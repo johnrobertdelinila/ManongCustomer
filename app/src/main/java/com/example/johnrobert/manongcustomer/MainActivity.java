@@ -2,6 +2,7 @@ package com.example.johnrobert.manongcustomer;
 
 import android.app.ActivityOptions;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -23,6 +24,7 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.tasks.OnCanceledListener;
@@ -30,6 +32,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -39,6 +42,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.functions.FirebaseFunctions;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -59,8 +63,11 @@ public class MainActivity extends AppCompatActivity {
     public static DatabaseReference rootRef = mDatabase.getReference();
     public static DatabaseReference customerRef = rootRef.child("Customers");
 
+    private FirebaseAnalytics mFirebaseAnalytics;
+
     private ProgressBar loginProgress;
     private MaterialButton loginButton;
+    private MaterialDialog loading;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +95,15 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+
+        FirebaseInstanceId.getInstance();
+
+        MaterialDialog.Builder builder = new MaterialDialog.Builder(MainActivity.this)
+                .content(R.string.manong_text_moment)
+                .progress(true, 0);
+        loading = builder.build();
 
         intent_register = new Intent(MainActivity.this, PreRegisterActivity.class);
 
@@ -135,10 +151,10 @@ public class MainActivity extends AppCompatActivity {
                     .addOnSuccessListener(authResult -> {
                         String uid = authResult.getUser().getUid();
                         // Checking if the user is customer.
-                        verifyUserCustomer(uid);
+                        verifyUserCustomer(uid, false);
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(this, Objects.requireNonNull(e.getMessage()), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, Objects.requireNonNull(e.getMessage()), Toast.LENGTH_LONG).show();
                         showProgressbar(false, loginButton);
                     });
         });
@@ -178,16 +194,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.text_forgot_password).setOnClickListener(view -> {
-            showAlertDialogReset();
-        });
+        findViewById(R.id.text_forgot_password).setOnClickListener(view -> showAlertDialogReset());
 
     }
 
     private void showAlertDialogReset() {
+        ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage(getString(R.string.manong_please_wait));
+
         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-        dialog.setTitle("Password Reset");
-        dialog.setMessage("Enter your Email Address to reset your password.");
+        dialog.setTitle("Reset Password");
+        dialog.setMessage("Enter your Email address to reset your password.");
         View view = getLayoutInflater().inflate(R.layout.layout_reset_password, null);
         TextInputLayout forgotTextInput = view.findViewById(R.id.email_text_input);
         TextInputEditText forgotEditText = view.findViewById(R.id.email_edit_text);
@@ -213,13 +230,16 @@ public class MainActivity extends AppCompatActivity {
                 forgotTextInput.setError(null);
             }
 
+            progressDialog.show();
+
             mAuth.sendPasswordResetEmail(forgotEditText.getText().toString())
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
+                            progressDialog.dismiss();
                             Toast.makeText(this, "An email reset password has been sent to your email.", Toast.LENGTH_LONG).show();
                             outputDialog.dismiss();
-
                         }else {
+                            progressDialog.dismiss();
                             if (task.getException() != null) {
                                 Toast.makeText(this, task.getException().getMessage(), Toast.LENGTH_LONG).show();
                             }
@@ -238,10 +258,12 @@ public class MainActivity extends AppCompatActivity {
 
             if (resultCode == RESULT_OK) {
                 // Successfully signed in
+
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if (user != null) {
+                    loading.show();
                     Log.e("SOCIAL MEDIA", "SUCCESS");
-                    updateCustomerAccount(user.getUid());
+                    verifyUserCustomer(user.getUid(), true);
                 }else {
                     Log.e("SOCIAL MEDIA", "NULL");
                 }
@@ -281,36 +303,95 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void verifyUserCustomer(String uid) {
+    private void verifyUserCustomer(String uid, boolean isSocialMedia) {
         customerRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.hasChild(uid)) {
                     // User is verified as a customer.
                     // Go to next activity.
-                    startActivity(intent);
-                    showProgressbar(false, loginButton);
+                    logEventLogin(uid);
+                    if (isSocialMedia) {
+                        updateCustomerAccount(uid);
+                    }else {
+                        loading.dismiss();
+                        startActivity(intent);
+                        showProgressbar(false, loginButton);
+                    }
                 }else {
-                    // Sign out because the user is not a customer.
-                    authUI.signOut(MainActivity.this)
-                            .addOnCompleteListener(task -> {
-                                if (task.isSuccessful()) {
-                                    Toast.makeText(MainActivity.this, "Username or password is invalid.", Toast.LENGTH_SHORT).show();
+                    // Not a customer
+                    if (isSocialMedia) {
+                        rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                if (dataSnapshot.hasChild("Providers")) {
+                                    dataSnapshot.getRef().child("Providers").addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                            if (!dataSnapshot.hasChild(uid)) {
+                                                // New Customer using social media
+                                                logEventSignUp(uid);
+                                                updateCustomerAccount(uid);
+                                            }else {
+                                                // Successfully signed in using the social media of the service provider - phone number
+                                                // Sign out because the user is provider.
+                                                signOut(true);
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                                            loading.dismiss();
+                                            showProgressbar(false, loginButton);
+                                        }
+                                    });
                                 }else {
-                                    Toast.makeText(MainActivity.this, Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
+                                    // new Customer using social media
+                                    logEventSignUp(uid);
+                                    updateCustomerAccount(uid);
                                 }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+                                loading.dismiss();
                                 showProgressbar(false, loginButton);
-                            });
+                            }
+                        });
+                    }else {
+                        // user is Service Provider using email and password.
+                        signOut(false);
+                    }
+
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
 //                startActivity(intent);
+                loading.dismiss();
                 showProgressbar(false, loginButton);
                 Toast.makeText(MainActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void signOut(boolean isSocialMedia) {
+        authUI.signOut(MainActivity.this)
+                .addOnCompleteListener(task -> {
+                    loading.dismiss();
+                    if (task.isSuccessful()) {
+                        if (isSocialMedia) {
+                            Toast.makeText(MainActivity.this, "Sorry but the account your trying to login " +
+                                    "is not authorized as customer.", Toast.LENGTH_LONG).show();
+                        }else {
+                            Toast.makeText(MainActivity.this, "The password is invalid or the user does not have a password.", Toast.LENGTH_LONG).show();
+                        }
+                    }else {
+                        Toast.makeText(MainActivity.this, Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                    showProgressbar(false, loginButton);
+                });
     }
 
     private void updateCustomerAccount(String uid) {
@@ -319,14 +400,28 @@ public class MainActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         // Successfully updated the user.
                         // Go to next activity.
+                        loading.dismiss();
                         startActivity(intent);
                         showProgressbar(false, loginButton);
                     }else {
                         // Show error.
+                        loading.dismiss();
                         Toast.makeText(MainActivity.this, Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
                         showProgressbar(false, loginButton);
                     }
                 });
+    }
+
+    private void logEventSignUp(String uid) {
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.VALUE, uid);
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SIGN_UP, bundle);
+    }
+
+    private void logEventLogin(String uid) {
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.VALUE, uid);
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle);
     }
 
 }

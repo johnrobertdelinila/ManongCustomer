@@ -7,6 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F0F0F0"
+    android:transitionName="@string/transition_name_navigational_transition"
     tools:context=".ChildActivity"
     tools:targetApi="lollipop">
 
@@ -41,7 +42,6 @@
 
         <RelativeLayout
             android:id="@+id/first_container"
-            android:transitionName="@string/transition_name_navigational_transition"
             android:elevation="1dp"
             android:paddingBottom="20dp"
             android:paddingStart="12dp"
@@ -90,29 +90,39 @@
                 android:layout_alignStart="@+id/textview_id_icon"
                 android:textAppearance="@style/SettingsTextAppearance"/>
 
-            <TextView
+            <LinearLayout
+                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
                 android:id="@+id/text_request_info"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
                 android:layout_marginTop="6dp"
                 android:layout_below="@+id/text_service_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="16dp"
                 android:layout_alignParentEnd="true"
-                android:textColor="@color/colorControlActivated"
-                android:text="@string/manong_text_info"
-                android:textStyle="bold"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Overline" />
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
 
-            <ImageView
-                android:id="@+id/image_info_logo"
-                android:layout_marginEnd="4dp"
-                android:layout_below="@+id/text_service_name"
-                android:layout_toStartOf="@+id/text_request_info"
-                app:srcCompat="@drawable/ic_info_black_24dp"
-                android:layout_marginTop="4dp"
-                android:layout_width="17dp"
-                android:layout_height="17dp"
-                android:contentDescription="@string/main_content_description_implementation_image" />
+                <ImageView
+                    android:id="@+id/image_info_logo"
+                    android:layout_marginEnd="4dp"
+                    app:srcCompat="@drawable/ic_info_black_24dp"
+                    android:layout_width="17dp"
+                    android:layout_height="17dp"
+                    android:layout_gravity="center_vertical"
+                    android:contentDescription="@string/main_content_description_implementation_image" />
+
+                <TextView
+                    android:layout_gravity="center_vertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colorControlActivated"
+                    android:text="@string/manong_text_info"
+                    android:textStyle="bold"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline" />
+
+            </LinearLayout>
 
         </RelativeLayout>
 
@@ -147,15 +157,16 @@
 
             <ImageView
                 android:id="@+id/image_clock"
-                android:layout_centerInParent="true"
-                app:srcCompat="@drawable/ic_av_timer_black_24dp"
+                android:layout_above="@+id/linearLayout"
+                android:layout_centerHorizontal="true"
+                app:srcCompat="@drawable/manong_timer"
                 android:layout_marginBottom="10dp"
                 android:layout_width="100dp"
                 android:layout_height="100dp" />
 
             <LinearLayout
-                android:layout_centerHorizontal="true"
-                android:layout_below="@+id/image_clock"
+                android:id="@+id/linearLayout"
+                android:layout_centerInParent="true"
                 android:orientation="vertical"
                 android:gravity="center_horizontal"
                 android:layout_width="wrap_content"

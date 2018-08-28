@@ -2,8 +2,10 @@ package com.example.johnrobert.manongcustomer;
 
 
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -55,12 +57,23 @@ public class ServiceFragment extends Fragment {
         recyclerView = view.findViewById(R.id.implementation_list);
         final GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 2);
         recyclerView.setLayoutManager(gridLayoutManager);
+        recyclerView.setHasFixedSize(true);
         adapter = new ImplementationAdapter(getContext(), (fromView, item) -> {
-            final Intent intent = new Intent(getContext(), item.getActivityClass());
+            Intent intent = new Intent(getContext(), item.getActivityClass());
             intent.putExtra(ServiceDetailActivity.INTENT_EXTRA_ITEM, item);
-            String sharedElementName = getString(R.string.transition_name_implementation_image);
-            final Bundle options = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, fromView, sharedElementName).toBundle();
-            ActivityCompat.startActivityForResult(activity, intent, REQUEST_ID_DETAIL, options);
+
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                String sharedElementName = getString(R.string.transition_name_implementation_image);
+                Bundle options = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, fromView, sharedElementName).toBundle();
+                ActivityCompat.startActivityForResult(activity, intent, REQUEST_ID_DETAIL, options);
+            }else {
+                startActivityForResult(intent, REQUEST_ID_DETAIL);
+            }
+
+//            String sharedElementName = getString(R.string.transition_name_implementation_image);
+//            Bundle options = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, fromView, sharedElementName).toBundle();
+//            ActivityCompat.startActivityForResult(activity, intent, REQUEST_ID_DETAIL, options);
+
         });
         gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override

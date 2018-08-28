@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.button.MaterialButton;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
@@ -47,8 +48,10 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -112,7 +115,6 @@ public class MessageProviderActivity extends AppCompatActivity {
     private FirebaseUser mFirebaseUser = mFirebaseAuth.getCurrentUser();
     private DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
     private DatabaseReference messagesRef = rootRef.child("Messages");
-    private DatabaseReference providerRef = rootRef.child("Providers");
     private boolean doneSettingUp;
 
     private String providerId;
@@ -121,7 +123,6 @@ public class MessageProviderActivity extends AppCompatActivity {
     private String providerPhoneNumber;
 
     private Intent intentProviderProfile;
-    private ProviderProfile providerProfile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,12 +136,14 @@ public class MessageProviderActivity extends AppCompatActivity {
             setContentView(R.layout.activity_message_provider);
         }
 
+        // Initialize and request AdMob ad.
+        setUpAdMob();
+
         messagelinkKey = getIntent().getStringExtra("messageLinkKey");
         providerId = getIntent().getStringExtra("providerId");
         providerName = getIntent().getStringExtra("providerName");
         providerPhoto = getIntent().getStringExtra("providerPhoto");
         providerPhoneNumber = getIntent().getStringExtra("providerPhoneNumber");
-        providerProfile = (ProviderProfile) getIntent().getSerializableExtra("providerProfile");
         doneSettingUp = false;
 
         intentProviderProfile = new Intent(MessageProviderActivity.this, ProviderProfileActivity.class);
@@ -149,15 +152,14 @@ public class MessageProviderActivity extends AppCompatActivity {
         intentProviderProfile.putExtra("providerDisplayName", providerName);
         intentProviderProfile.putExtra("providerPhotoUrl", providerPhoto);
         intentProviderProfile.putExtra("providerPhoneNumber", providerPhoneNumber);
-        intentProviderProfile.putExtra("providerProfile", providerProfile);
 
         if (providerName == null && providerPhoto == null && providerPhoneNumber == null) {
             getProviderProfile(providerId, intentProviderProfile);
         }
 
-        if (providerProfile == null) {
-            getProviderProfile2(providerId, intentProviderProfile);
-        }
+//        if (providerProfile == null) {
+//            getProviderProfile2(providerId, intentProviderProfile);
+//        }
 
         if (mFirebaseUser != null){
             // Getting the name from Firebase User
@@ -261,11 +263,6 @@ public class MessageProviderActivity extends AppCompatActivity {
             }
         });
 
-        // Initialize and request AdMob ad.
-        mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
-
         mMessageEditText = findViewById(R.id.messageEditText);
         mMessageEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -331,6 +328,52 @@ public class MessageProviderActivity extends AppCompatActivity {
         }
     }
 
+    private void setUpAdMob() {
+        mAdView = findViewById(R.id.adView);
+
+//        AdRequest adRequest = new AdRequest.Builder().build();
+//        mAdView.loadAd(adRequest);
+
+        MobileAds.initialize(MessageProviderActivity.this, getString(R.string.banner_app_unit_id));
+        AdRequest adRequest = new AdRequest.Builder().addTestDevice("DE559DA4D5770BE11553FFA6B05CDE12").build();
+        adRequest.isTestDevice(this);
+        mAdView.loadAd(adRequest);
+        mAdView.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+                Log.e("AD", "LOADED");
+            }
+
+            @Override
+            public void onAdFailedToLoad(int errorCode) {
+                // Code to be executed when an ad request fails.
+                Log.e("AD", "FAILED - " + String.valueOf(errorCode));
+                mAdView.loadAd(new AdRequest.Builder().build());
+            }
+
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when an ad opens an overlay that
+                // covers the screen.
+                Log.e("AD", "OPENED");
+            }
+
+            @Override
+            public void onAdLeftApplication() {
+                // Code to be executed when the user has left the app.
+                Log.e("AD", "LEFT THE APP");
+            }
+
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when when the user is about to return
+                // to the app after tapping on an ad.
+                Log.e("AD", "CLOSED");
+            }
+        });
+    }
+
     private void updateMessageDisplayName(String providerNewDisplayname, String photoURL, String uid) {
         Query query = messagesRef.child(messagelinkKey).orderByChild("uid").equalTo(uid);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -368,7 +411,14 @@ public class MessageProviderActivity extends AppCompatActivity {
     private void setUpEnterTransition() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-            Slide slide = new Slide(Gravity.END);
+            Slide slide;
+
+            if (android.os.Build.VERSION.SDK_INT == android.os.Build.VERSION_CODES.LOLLIPOP) {
+                slide = new Slide(GravityCompat.getAbsoluteGravity(GravityCompat.END, getResources().getConfiguration().getLayoutDirection()));
+            }else {
+                slide = new Slide(Gravity.END);
+            }
+
             slide.excludeTarget(android.R.id.statusBarBackground, true);
             slide.excludeTarget(android.R.id.navigationBarBackground, true);
             getWindow().setEnterTransition(slide);
@@ -567,20 +617,20 @@ public class MessageProviderActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private void getProviderProfile2(String providerId, Intent intent) {
-        providerRef.child(providerId).child("my_profile").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                ProviderProfile providerProfile = dataSnapshot.getValue(ProviderProfile.class);
-                intent.putExtra("providerProfile", providerProfile);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-    }
+//    private void getProviderProfile2(String providerId, Intent intent) {
+//        providerRef.child(providerId).child("my_profile").addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                ProviderProfile providerProfile = dataSnapshot.getValue(ProviderProfile.class);
+//                intent.putExtra("providerProfile", providerProfile);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+//    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

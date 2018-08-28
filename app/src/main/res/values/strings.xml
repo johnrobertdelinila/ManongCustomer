@@ -18,7 +18,7 @@
     <string name="manong_how_this_works">How this works?</string>
     <string name="manong_job_request_title">Job Request</string>
     <string name="manong_request_detail_title">Request Detail</string>
-    <string name="manong_header_request">Request History</string>
+    <string name="manong_header_request">My Request</string>
     <string name="manong_text_waiting">We are waiting for quotes from vendors\nWe will notify you as soon as we receive\nquotes from your request.</string>
     <string name="manong_step_1">Submit a request now.</string>
     <string name="manong_step_2">Get up to a 5 quotes from professional and verified vendors.</string>
@@ -33,7 +33,7 @@
 
     <string name="banner_app_unit_id" translatable="false">ca-app-pub-7303190061353762~2162966785</string>
     <!--<string name="banner_ad_unit_id" translatable="false">ca-app-pub-7303190061353762/5527496723</string>-->
-
+    <!--Test Banner Unit ID-->
     <string name="banner_ad_unit_id" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
 
     <!-- Manong backdrop menu labels -->
@@ -89,7 +89,7 @@
 
     <!-- Vertical Stepper Form Layout String Override -->
     <string name="vertical_form_stepper_form_continue">NEXT</string>
-    <string name="vertical_form_stepper_form_confirm_button">CONFIRM DATA</string>
+    <string name="vertical_form_stepper_form_confirm_button">CONFIRM REQUEST</string>
     <string name="vertical_form_stepper_form_last_step">Summary</string>
 
     <string name="text_button_saving">SAVING…</string>
@@ -98,5 +98,8 @@
     <string name="manong_quotations">New Quotations</string>
     <string name="manong_messages">New Messages</string>
     <string name="manong_jobs">New Completed Jobs</string>
+    <string name="manong_text_moment">One moment…</string>
+
+    <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
 
 </resources>

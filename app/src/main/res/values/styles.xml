@@ -77,6 +77,8 @@
         <item name="android:textColorHint">?attr/colorPrimary</item>
         <item name="errorTextAppearance">@style/Widget.Manong.TextInputLayout.Error</item>
         <item name="android:paddingBottom">8dp</item>
+        <item name="boxCornerRadiusTopStart">0dp</item>
+        <item name="boxCornerRadiusTopEnd">0dp</item>
     </style>
 
     <style name="Widget.Manong.TextInputLayout.Error">

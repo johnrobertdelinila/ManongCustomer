@@ -15,11 +15,11 @@
         android:layout_height="wrap_content">
 
         <android.support.v7.widget.Toolbar
-            app:navigationIcon="@drawable/ic_arrow_back_black_24dp"
+            app:navigationIcon="@drawable/manong_back"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             style="@style/Widget.Manong.Toolbar.Ordinary"
             android:id="@+id/toolbar"
-            app:title="@string/manong_register_title"
+            app:title="Account"
             android:paddingStart="12dp"
             android:paddingLeft="12dp"
             android:paddingEnd="12dp"
@@ -51,7 +51,7 @@
                 android:fontFamily="@font/rubik_medium"
                 android:textSize="20sp"
                 android:textColor="@color/textColorPrimary"
-                android:text="Account details."
+                android:text="Account information"
                 android:layout_marginBottom="28dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -193,7 +193,7 @@
                     <android.support.design.button.MaterialButton
                         android:id="@+id/register_button"
                         style="@style/Widget.Manong.Button"
-                        android:text="Continue"
+                        android:text="REGISTER"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content" />
 

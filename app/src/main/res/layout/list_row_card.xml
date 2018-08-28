@@ -14,7 +14,7 @@
     app:contentPaddingBottom="10dp"
     android:layout_marginBottom="@dimen/spacing_normal_8dp"
     android:clickable="true"
-    android:foreground="?android:attr/selectableItemBackground"
+    android:background="?android:attr/selectableItemBackgroundBorderless"
     android:focusable="true">
 
     <LinearLayout

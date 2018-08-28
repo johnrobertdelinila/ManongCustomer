@@ -3,10 +3,8 @@ package com.example.johnrobert.manongcustomer;
 import android.animation.AnimatorInflater;
 import android.animation.StateListAnimator;
 import android.annotation.SuppressLint;
-import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
@@ -16,10 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PersistableBundle;
 import android.provider.MediaStore;
-import android.support.design.button.MaterialButton;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -29,17 +24,10 @@ import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
-import com.firebase.ui.auth.AuthUI;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -50,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Random;
 import java.util.TreeMap;
 
@@ -63,7 +50,6 @@ public class ChecklistActivity extends AppCompatActivity implements VerticalStep
     public int currentStepNumber = -1;
     public static final int PICK_IMAGE_REQUEST_CODE = 2006;
     public static int resultStepNumber = -1;
-    public static final int FINISH_ACTIVITY = 3000;
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
 
     public Service service;
@@ -101,29 +87,12 @@ public class ChecklistActivity extends AppCompatActivity implements VerticalStep
         rowImage.setImageDrawable(getResources().getDrawable(R.drawable.ic_close_black_24dp));
         rowImage.setOnClickListener(view -> onBackPressed());
 
-        fabLogin = findViewById(R.id.fab_login);
-//        fabLogin.setOnClickListener(view -> {
-//            Intent intent = new Intent(this, LoginActivity.class);
-//            int color = ContextCompat.getColor(this, R.color.colorControlActivated);
-//            if (AndroidVersionUtil.isGreaterThanL()) {
-//                FabTransform.addExtras(intent, color, R.drawable.ic_person_black_24dp);
-//            }
-//            ActivityOptionsCompat optionsCompat = ActivityOptionsCompat
-//                    .makeSceneTransitionAnimation(this,
-//                            view,
-//                            getString(R.string.transition_name_login));
-//            ActivityCompat.startActivity(this, intent, optionsCompat.toBundle());
-//        });
-
         progressDialog = new ProgressDialog(this, R.style.ManongDialogTheme);
         progressDialog.setCancelable(false);
         progressDialog.setMessage(getString(R.string.manong_please_wait));
 
         service = (Service) getIntent().getSerializableExtra("service");
         checklistAdapters = new ArrayList<>();
-
-//        service.getTitle().add("Summary");
-//        service.getSubtitle().add("Confirm Request");
 
         mySteps = service.getTitle().toArray(new String[service.getTitle().size()]);
         subTitles = service.getSubtitle().toArray(new String[service.getSubtitle().size()]);
@@ -132,21 +101,22 @@ public class ChecklistActivity extends AppCompatActivity implements VerticalStep
         viewTypes = service.getViewTypes();
         answers = service.getAnswers();
 
-//        isInput.add(false);
-//        viewTypes.add(6);
-//        answers.add(null);
-
         downloadUrls = new ArrayList<>();
+
+        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            onEnterAnimationComplete();
+        }
     }
 
     @Override
     public void onEnterAnimationComplete() {
         super.onEnterAnimationComplete();
 
+        Log.e("HELLO", "HELLO");
+
         if (verticalStepperFormLayout == null) {
             verticalStepperFormLayout = findViewById(R.id.all_element_share_no_share_text);
 
-            int colorPrimary = ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary);
             int colorPrimaryDark = ContextCompat.getColor(getApplicationContext(), R.color.colorPrimaryDark);
             int colorAccent = ContextCompat.getColor(getApplicationContext(), R.color.colorControlActivated);
 
@@ -159,18 +129,11 @@ public class ChecklistActivity extends AppCompatActivity implements VerticalStep
                     .init();
         }
 
-        if (user == null) {
-            fabLogin.animate().scaleX(1).scaleY(1).setDuration(150).start();
-        }else {
-            fabLogin.animate().scaleX(0).scaleY(0).setDuration(350).start();
-        }
     }
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-
-//        fabLogin.animate().scaleX(0).scaleY(0).setDuration(150).start();
     }
 
     @Override
@@ -182,63 +145,6 @@ public class ChecklistActivity extends AppCompatActivity implements VerticalStep
 
     @SuppressLint("ClickableViewAccessibility")
     private View createView(int viewType, ArrayList<String> answers, Boolean isInput, final int stepNumber) {
-
-//        if (viewType == 6) {
-//            LayoutInflater inflater = LayoutInflater.from(getBaseContext());
-//            checklistAdapters.add(new ChecklistAdapter(ChecklistActivity.this, null, null, answers, isInput, null, stepNumber));
-//            return inflater.inflate(R.layout.layout_summary, null, false);
-//        }else {
-//            Boolean isTextField = null;
-//            Boolean isCheckBox = null;
-//            Boolean isaAttachment = null;
-//            if (viewType == 1) {
-//                isCheckBox = true;
-//                isTextField = null;
-//            }else if (viewType == 2) {
-//                isCheckBox = false;
-//                isTextField = null;
-//            }else  if (viewType == 3) {
-//                answers = null;
-//                isTextField = true;
-//            }else if (viewType == 4) {
-//                answers = null;
-//                isTextField = false;
-//            }else if (viewType == 5) {
-//                answers = null;
-//                isaAttachment = true;
-//            }
-//
-//            ChecklistAdapter checklistAdapter = new ChecklistAdapter(ChecklistActivity.this, isTextField, isCheckBox, answers, isInput, isaAttachment, stepNumber);
-//            checklistAdapters.add(checklistAdapter);
-//
-//            // STARTS HERE
-//            LayoutInflater inflater = LayoutInflater.from(getBaseContext());
-//            final LinearLayout view;
-//
-//            if (isTextField != null && !isTextField) {
-//                view = (LinearLayout) inflater.inflate(R.layout.layout_listview_fordate, null, false);
-//            }else if (answers != null && answers.size() <= 4){
-//                view = (LinearLayout) inflater.inflate(R.layout.layout_listview_small, null, false);
-//            } else {
-//                view = (LinearLayout) inflater.inflate(R.layout.layout_listview, null, false);
-//            }
-//
-//            ListView listView = view.findViewById(R.id.listView);
-//            listView.setDescendantFocusability(ListView.FOCUS_AFTER_DESCENDANTS);
-//
-//            if (isTextField == null) {
-//                // Setting on Touch Listener for handling the touch inside ScrollView
-//                listView.setOnTouchListener((v, event) -> {
-//                    // Disallow the touch request for parent scroll on touch of child view
-//                    v.getParent().requestDisallowInterceptTouchEvent(true);
-//                    return false;
-//                });
-//                listView.setOnItemClickListener((parent, view1, position, id) -> checklistAdapters.get(stepNumber).changeItemChecked(position));
-//            }
-//
-//            listView.setAdapter(checklistAdapters.get(stepNumber));
-//            return view;
-//        }
 
         Boolean isTextField = null;
         Boolean isCheckBox = null;
@@ -644,18 +550,6 @@ public class ChecklistActivity extends AppCompatActivity implements VerticalStep
         location_latlng.put("latitude", service.getLatitude());
         location_latlng.put("longtitude", service.getLongtitude());
         return location_latlng;
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-
-        super.onSaveInstanceState(outState, outPersistentState);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-
-        super.onRestoreInstanceState(savedInstanceState);
     }
 
     @Override
