@@ -25,7 +25,6 @@ import android.support.design.button.MaterialButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -39,6 +38,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -69,6 +69,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -81,7 +82,9 @@ public class MessageProviderActivity extends AppCompatActivity {
         TextView messageTextView;
         ImageView messageImageView;
         TextView messengerTextView;
+        LinearLayout containerMessageInro;
         CircleImageView messengerImageView;
+        TextView messagePrice, messageDate;
 
         public MessageViewHolder(View itemView) {
             super(itemView);
@@ -89,6 +92,9 @@ public class MessageProviderActivity extends AppCompatActivity {
             messageImageView = itemView.findViewById(R.id.messageImageView);
             messengerTextView = itemView.findViewById(R.id.messengerTextView);
             messengerImageView = itemView.findViewById(R.id.messengerImageView);
+            containerMessageInro = itemView.findViewById(R.id.container_message_intro);
+            messagePrice = itemView.findViewById(R.id.text_price);
+            messageDate = itemView.findViewById(R.id.text_date);
         }
     }
 
@@ -108,9 +114,11 @@ public class MessageProviderActivity extends AppCompatActivity {
     private EditText mMessageEditText;
     public ImageView mAddMessageImageView;
     private AdView mAdView;
+    private TextView textFirstMessage;
+
     private FirebaseFunctions mFunctions = FirebaseFunctions.getInstance();
 
-    private String messagelinkKey;
+    private String messagelinkKey, receiverId;
     private FirebaseAuth mFirebaseAuth = FirebaseAuth.getInstance();
     private FirebaseUser mFirebaseUser = mFirebaseAuth.getCurrentUser();
     private DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
@@ -139,6 +147,8 @@ public class MessageProviderActivity extends AppCompatActivity {
         // Initialize and request AdMob ad.
         setUpAdMob();
 
+        textFirstMessage = findViewById(R.id.text_first_message);
+
         messagelinkKey = getIntent().getStringExtra("messageLinkKey");
         providerId = getIntent().getStringExtra("providerId");
         providerName = getIntent().getStringExtra("providerName");
@@ -152,6 +162,8 @@ public class MessageProviderActivity extends AppCompatActivity {
         intentProviderProfile.putExtra("providerDisplayName", providerName);
         intentProviderProfile.putExtra("providerPhotoUrl", providerPhoto);
         intentProviderProfile.putExtra("providerPhoneNumber", providerPhoneNumber);
+
+        receiverId = messagelinkKey.replaceAll(mFirebaseUser.getUid(), "").trim();
 
         if (providerName == null && providerPhoto == null && providerPhoneNumber == null) {
             getProviderProfile(providerId, intentProviderProfile);
@@ -235,7 +247,9 @@ public class MessageProviderActivity extends AppCompatActivity {
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             if (dataSnapshot.hasChild(messagelinkKey) && !doneSettingUp) {
                                 setUpChatMessage();
+                                textFirstMessage.setVisibility(View.GONE);
                             }else {
+                                textFirstMessage.setVisibility(View.VISIBLE);
                                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                             }
                             // Remove the listener because we now know that their chat message already exist.
@@ -253,6 +267,7 @@ public class MessageProviderActivity extends AppCompatActivity {
                     });
 
                 }else {
+                    textFirstMessage.setVisibility(View.VISIBLE);
                     mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 }
             }
@@ -294,7 +309,7 @@ public class MessageProviderActivity extends AppCompatActivity {
         mSendButton = findViewById(R.id.sendButton);
         mSendButton.setOnClickListener(view -> {
             ManongMessage manongMessage = new ManongMessage(mMessageEditText.getText().toString(), mUsername,
-                    mPhotoUrl, null, mFirebaseUser.getUid(), ServerValue.TIMESTAMP);
+                    mPhotoUrl, null, mFirebaseUser.getUid(), ServerValue.TIMESTAMP, receiverId, MainActivity.userType);
             messagesRef.child(messagelinkKey).push().setValue(manongMessage);
             mMessageEditText.setText("");
         });
@@ -463,7 +478,7 @@ public class MessageProviderActivity extends AppCompatActivity {
 
                 if (message.getUid().equals(providerId)) {
                     holder.messengerImageView.setOnClickListener(view -> {
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
                             startActivity(intentProviderProfile);
                         } else {
                             final ActivityOptions options = ActivityOptions
@@ -517,6 +532,15 @@ public class MessageProviderActivity extends AppCompatActivity {
                             .load(message.getPhotoUrl())
                             .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
                             .into(holder.messengerImageView);
+                }
+
+                if (message.getQuoteMessage() != null) {
+                    holder.containerMessageInro.setVisibility(View.VISIBLE);
+                    holder.messagePrice.setText("₱ " + convertNumber(Integer.parseInt(message.getQuoteMessage().get("min_price"))) + " - "
+                            + convertNumber(Integer.parseInt(message.getQuoteMessage().get("max_price"))));
+                    holder.messageDate.setText(message.getQuoteMessage().get("date"));
+                }else {
+                    holder.containerMessageInro.setVisibility(View.GONE);
                 }
 
             }
@@ -645,7 +669,7 @@ public class MessageProviderActivity extends AppCompatActivity {
                     Log.d(TAG, "Uri: " + uri.toString());
 
                     ManongMessage tempMessage = new ManongMessage(null, mUsername, mPhotoUrl,
-                            LOADING_IMAGE_URL, mFirebaseUser.getUid(), ServerValue.TIMESTAMP);
+                            LOADING_IMAGE_URL, mFirebaseUser.getUid(), ServerValue.TIMESTAMP, receiverId, MainActivity.userType);
                     messagesRef.child(messagelinkKey).push()
                             .setValue(tempMessage, (databaseError, databaseReference) -> {
                                 if (databaseError == null) {
@@ -690,7 +714,8 @@ public class MessageProviderActivity extends AppCompatActivity {
                 .addOnCompleteListener(task -> {
                             if (task.isSuccessful()) {
                                 ManongMessage manongMessage =
-                                        new ManongMessage(null, mUsername, mPhotoUrl, task.getResult().toString(), mFirebaseUser.getUid(), ServerValue.TIMESTAMP);
+                                        new ManongMessage(null, mUsername, mPhotoUrl, task.getResult().toString(), mFirebaseUser.getUid(),
+                                                ServerValue.TIMESTAMP, receiverId, MainActivity.userType);
                                 messagesRef.child(messagelinkKey).child(key)
                                         .setValue(manongMessage);
                             }
@@ -710,6 +735,11 @@ public class MessageProviderActivity extends AppCompatActivity {
                     return result;
                 });
 
+    }
+
+    private String convertNumber(Integer number) {
+        DecimalFormat formatter = new DecimalFormat("#,###,###");
+        return formatter.format(number);
     }
 
 }

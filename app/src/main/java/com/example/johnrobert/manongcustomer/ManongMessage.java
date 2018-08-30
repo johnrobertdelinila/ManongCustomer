@@ -15,6 +15,8 @@
  */
 package com.example.johnrobert.manongcustomer;
 
+import java.util.Map;
+
 public class ManongMessage {
 
     private String uid;
@@ -23,17 +25,45 @@ public class ManongMessage {
     private String photoUrl;
     private String imageUrl;
     private Object timestamp;
+    private String receiverUid;
+    private String type;
+    private Map<String, String> quoteMessage;
 
-    public ManongMessage() {
-    }
+    public ManongMessage() { }
 
-    public ManongMessage(String text, String name, String photoUrl, String imageUrl, String uid, Object timestamp) {
+    public ManongMessage(String text, String name, String photoUrl, String imageUrl, String uid, Object timestamp, String receiverUid, String type) {
         this.text = text;
         this.name = name;
         this.photoUrl = photoUrl;
         this.imageUrl = imageUrl;
         this.uid = uid;
         this.timestamp = timestamp;
+        this.receiverUid = receiverUid;
+        this.type = type;
+    }
+
+    public Map<String, String> getQuoteMessage() {
+        return quoteMessage;
+    }
+
+    public void setQuoteMessage(Map<String, String> quoteMessage) {
+        this.quoteMessage = quoteMessage;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getReceiverUid() {
+        return receiverUid;
+    }
+
+    public void setReceiverUid(String receiverUid) {
+        this.receiverUid = receiverUid;
     }
 
     public Object getTimestamp() {

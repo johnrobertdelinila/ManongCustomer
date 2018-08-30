@@ -195,7 +195,11 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
 
         ImageView allShareRowImage = findViewById(R.id.all_element_share_image);
 
-        imageView.setImageResource(image);
+        try {
+            imageView.setImageResource(image);
+        }catch (Exception e) {
+            Log.e("IMAGE EXCEPTION", e.getMessage());
+        }
 
 //        Bitmap bitmap = ResourceUtil.getBitmap(this, item.imageRes);
 //        RoundedBitmapDrawable circularBitmapDrawable = RoundedBitmapDrawableFactory.create(getResources(), bitmap);

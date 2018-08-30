@@ -32,9 +32,13 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.functions.FirebaseFunctionsException;
@@ -72,6 +76,7 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
     private String providerPhotoUrl;
     private Boolean isWithoutTransition;
     public static Palette.Swatch sakuChan;
+    private boolean isBackPressed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -287,6 +292,46 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
                 .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
                 .load(photoUrl)
                 .into(new SimpleTarget<Bitmap>() {
+
+                    @Override
+                    public void onLoadFailed(@Nullable Drawable errorDrawable) {
+                        super.onLoadFailed(errorDrawable);
+                        Log.e("PHOTO", "FAIL ANALYZING");
+                        Glide.with(getApplicationContext())
+                                .load(photoUrl)
+                                .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
+                                .listener(new RequestListener<Drawable>() {
+                                    @Override
+                                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                            temp_layout.setElevation(0);
+                                        }
+                                        temp_layout.setVisibility(RelativeLayout.GONE);
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isWithoutTransition == null) {
+                                            startPostponedEnterTransition();
+                                        }else {
+                                            setUpAfterEnterTask();
+                                        }
+                                        return false;
+                                    }
+
+                                    @Override
+                                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                            temp_layout.setElevation(0);
+                                        }
+                                        temp_layout.setVisibility(RelativeLayout.GONE);
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isWithoutTransition == null) {
+                                            startPostponedEnterTransition();
+                                        }else {
+                                            setUpAfterEnterTask();
+                                        }
+                                        return false;
+                                    }
+                                })
+                                .into(providerImageView);
+                    }
+
                     @Override
                     public void onResourceReady(@NonNull Bitmap bitmap, @Nullable Transition<? super Bitmap> transition) {
                         Palette.from(bitmap)
@@ -453,10 +498,17 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
     }
 
     @Override
+    public void onBackPressed() {
+        isBackPressed = true;
+        super.onBackPressed();
+    }
+
+    @Override
     protected void onPause() {
+        if (!isBackPressed) {
+            scrim.animate().alpha(0.6f).setDuration(0);
+        }
         super.onPause();
-        Log.e("HELLO", "PAUSE");
-        scrim.animate().alpha(0.6f).setDuration(0);
     }
 
     @Override

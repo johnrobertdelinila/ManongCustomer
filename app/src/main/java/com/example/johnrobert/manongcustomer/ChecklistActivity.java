@@ -272,6 +272,7 @@ public class ChecklistActivity extends AppCompatActivity implements VerticalStep
         request.setLocation_latlng(getLocationLatLng());
         request.setServiceName(service.getServiceName());
         request.setUserId(user.getUid());
+        request.setCustomerName(user.getDisplayName());
         if (service.getLocationName() != null) {
             request.setLocationName(service.getLocationName());
         }
@@ -458,7 +459,6 @@ public class ChecklistActivity extends AppCompatActivity implements VerticalStep
     private void finishActivityOnSuccess() {
         ServiceDetailActivity.isDone = true;
         progressDialog.dismiss();
-        Toast.makeText(ChecklistActivity.this, "Request sent successfully. Please wait for the vendor respond.", Toast.LENGTH_LONG).show();
         onBackPressed();
     }
 

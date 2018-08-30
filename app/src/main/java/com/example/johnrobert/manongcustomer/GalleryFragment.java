@@ -199,7 +199,6 @@ public class GalleryFragment extends Fragment {
             @Override
             protected void onBindViewHolder(@NonNull PhotoViewHolder holder, int position, @NonNull Photos photo) {
                 holder.temp_image.resetLoader();
-                holder.itemView.setOnClickListener(view -> showFullScreenImage(photo.getUrl(), view));
                 try {
                     Glide.with(activity.getApplicationContext())
                             .load(photo.url)
@@ -217,6 +216,7 @@ public class GalleryFragment extends Fragment {
                                 public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
                                     holder.temp_image.setVisibility(LoaderImageView.INVISIBLE);
                                     holder.image.setImageDrawable(resource);
+                                    holder.itemView.setOnClickListener(view -> showFullScreenImage(photo.getUrl(), view));
                                     return false;
                                 }
                             })

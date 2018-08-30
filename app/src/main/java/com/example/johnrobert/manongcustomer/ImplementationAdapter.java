@@ -3,6 +3,7 @@ package com.example.johnrobert.manongcustomer;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -153,7 +154,11 @@ class ImplementationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
 
         void bind(final ImplementationItem item, final OnItemClickListener itemClickListener) {
-            imageView.setImageResource(item.imageRes);
+            try {
+                imageView.setImageResource(item.imageRes);
+            }catch (Exception e) {
+                Log.e("IMAGE EXCEPTION", e.getMessage());
+            }
             titleView.setText(item.title);
             itemView.setOnClickListener(v -> itemClickListener.onItemClick(itemView, item));
 

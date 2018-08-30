@@ -8,7 +8,7 @@ public class Request implements Serializable {
 
     private HashMap<String, String> questionsAndAnswers, images, quotes, booked;
     private HashMap<String, Double> location_latlng;
-    private String serviceName, userId, key, locationName, cancellationReason;
+    private String serviceName, userId, key, locationName, cancellationReason, customerName;
     private Object timestamp;
     private Boolean isCancelled;
 
@@ -16,7 +16,7 @@ public class Request implements Serializable {
 
     public Request(HashMap<String, String> questionsAndAnswers, HashMap<String, String> images, HashMap<String, Double> location_latlng, String serviceName,
                    String userId, HashMap<String, String> quotes, Object timestamp, String locationName,
-                   Boolean isCancelled, String cancellationReason, HashMap<String, String> booked) {
+                   Boolean isCancelled, String cancellationReason, HashMap<String, String> booked, String customerName) {
         this.questionsAndAnswers = questionsAndAnswers;
         this.images = images;
         this.location_latlng = location_latlng;
@@ -28,6 +28,15 @@ public class Request implements Serializable {
         this.isCancelled = isCancelled;
         this.cancellationReason = cancellationReason;
         this.booked = booked;
+        this.customerName = customerName;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 
     public HashMap<String, String> getBooked() {

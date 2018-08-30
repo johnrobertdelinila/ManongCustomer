@@ -352,7 +352,7 @@ public class MessageFragment extends Fragment {
                     ManongMessage lastMessage = childSnapshot.getValue(ManongMessage.class);
                     if (lastMessage != null) {
                         // TODO: Limit the last text character
-                        SimpleDateFormat sfd = new SimpleDateFormat("d MMM y, h:mm a", Locale.getDefault());
+                        SimpleDateFormat sfd = new SimpleDateFormat("h:mm a, d MMM", Locale.getDefault());
                         String dateTime = sfd.format(new Date((Long) lastMessage.getTimestamp()));
                         text_last_message.setText(lastMessage.getText());
                         text_last_date.setText(dateTime);

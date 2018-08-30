@@ -7,6 +7,7 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -296,7 +297,7 @@ public class RequestFragment extends Fragment {
                         Intent intent = new Intent(context, ChildActivity.class);
                         intent.putExtra("request", request);
 
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             String elementName = getString(R.string.transition_name_navigational_transition);
                             Pair cardSharedElement = Pair.create(view, elementName);
                             Pair serviceNameSharedElement = Pair.create(holder.serviceName, "transition_service_name");
@@ -398,6 +399,9 @@ public class RequestFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+        if (recyclerView != null) {
+            recyclerView.setLayoutFrozen(false);
+        }
         if (firebaseAdapter != null) {
             firebaseAdapter.startListening();
         }

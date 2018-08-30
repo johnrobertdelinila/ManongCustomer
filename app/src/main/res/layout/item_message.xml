@@ -4,6 +4,9 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?attr/selectableItemBackground"
     android:layout_marginBottom="10dp">
 
     <LinearLayout
@@ -15,8 +18,7 @@
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/messengerImageView"
             android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:src="@mipmap/ic_account_circle_black_36dp"/>
+            android:layout_height="36dp" />
 
         <LinearLayout
             android:orientation="vertical"
@@ -24,6 +26,71 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:layout_marginStart="10dp">
+
+            <LinearLayout
+                android:id="@+id/container_message_intro"
+                android:visibility="gone"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:textAppearance="@style/TextAppearance.Intro"
+                    android:text="Quote Price:"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/text_price"
+                        android:textAppearance="@style/TextAppearance.Messenger"
+                        android:text="‎₱ 6,500.00 - 7,000.00"
+                        android:textColor="@color/colorControlActivated"
+                        android:layout_marginEnd="8dp"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:textAppearance="@style/TextAppearance.Messenger"
+                        android:text="Lump Sum"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:textAppearance="@style/TextAppearance.Intro"
+                    android:text="Service Date:"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/text_date"
+                    android:textAppearance="@style/TextAppearance.Message"
+                    android:text="16th Apr 2018"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <View
+                    android:id="@+id/divider"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@android:drawable/divider_horizontal_bright" />
+
+                <!--<TextView-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_weight="0"-->
+                <!--android:textAppearance="@style/TextAppearance.Intro"/>-->
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/messageTextView"

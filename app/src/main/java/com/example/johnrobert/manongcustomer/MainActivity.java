@@ -53,6 +53,7 @@ import java.util.Objects;
 public class MainActivity extends AppCompatActivity {
 
     private static final int RC_SIGN_IN = 1996;
+    public static final String userType = "customer";
     private Intent intent, intent_register;
 
     public static FirebaseAuth mAuth = FirebaseAuth.getInstance();
@@ -185,14 +186,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.text_guest).setOnClickListener(view ->
                 startActivity(intent));
 
-        findViewById(R.id.register_button).setOnClickListener(view -> {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(this).toBundle();
-                this.startActivity(intent_register, bundle);
-            }else {
-                startActivity(intent_register);
-            }
-        });
+        findViewById(R.id.register_button).setOnClickListener(view -> startActivity(intent_register));
 
         findViewById(R.id.text_forgot_password).setOnClickListener(view -> showAlertDialogReset());
 

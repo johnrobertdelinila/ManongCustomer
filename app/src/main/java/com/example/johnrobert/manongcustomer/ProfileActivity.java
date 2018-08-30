@@ -1,10 +1,13 @@
 package com.example.johnrobert.manongcustomer;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.button.MaterialButton;
 import android.support.design.widget.TextInputEditText;
@@ -22,10 +25,13 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.alimuzaffar.lib.pin.PinEntryEditText;
 import com.bumptech.glide.Glide;
 import com.firebase.ui.auth.AuthUI;
@@ -75,6 +81,7 @@ public class ProfileActivity extends AppCompatActivity {
     private TextInputEditText emailEditText, phoneEditText;
     private CircleImageView userPhotoUrl;
     private MaterialButton updateButton, changePassButton;
+    private MaterialDialog loading;
 
     private FirebaseUser user = ManongActivity.mUser;
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
@@ -277,6 +284,11 @@ public class ProfileActivity extends AppCompatActivity {
         updateButton = findViewById(R.id.update_button);
         changePassButton = findViewById(R.id.change_pass_button);
 
+        MaterialDialog.Builder builder = new MaterialDialog.Builder(ProfileActivity.this)
+                .content(getString(R.string.manong_please_wait))
+                .progress(true, 0);
+        loading = builder.build();
+
         gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.web_client_id))
                 .requestEmail()
@@ -288,11 +300,12 @@ public class ProfileActivity extends AppCompatActivity {
             @Override
             public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
                 updatePhoneCredential = phoneAuthCredential;
-                updatePhoneNumber();
+                updatePhoneNumber(null, null, null, null, null);
             }
 
             @Override
             public void onVerificationFailed(FirebaseException e) {
+                loading.dismiss();
                 if (e instanceof FirebaseAuthInvalidCredentialsException) {
                     // Invalid request
                     Toast.makeText(ProfileActivity.this, "Invalid Request: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -408,16 +421,31 @@ public class ProfileActivity extends AppCompatActivity {
 
     // SEQUENCE: PHONE NUMBER -> EMAIL -> DISPLAY NAME
 
-    private void updatePhoneNumber() {
+    private void updatePhoneNumber(PinEntryEditText codeInput, MaterialButton phoneButton,
+                                   LinearLayout linearLayout, ProgressBar progressBar, AlertDialog outDialog) {
         if (phoneNumber != null && !phoneNumber.equals(updatePhoneNumber) || phoneNumber == null && !updatePhoneNumber.trim().equalsIgnoreCase("")) {
             user.updatePhoneNumber(updatePhoneCredential)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
+                            if (outDialog != null) {
+                                outDialog.dismiss();
+                            }
+                            loading.show();
                             updateEmail();
                         }else {
+                            if (phoneButton != null) {
+                                phoneButton.setEnabled(false);
+                            }
+                            if (codeInput != null) {
+                                codeInput.setText(null);
+                            }
+                            if (linearLayout != null && progressBar != null) {
+                                linearLayout.setVisibility(View.VISIBLE);
+                                progressBar.setVisibility(View.GONE);
+                            }
                             if (task.getException() != null) {
                                 if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
-                                    Toast.makeText(this, "The sms verification code used to create the phone auth credential is invalid.", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(ProfileActivity.this, "The verification code entered was invalid. Please try again.", Toast.LENGTH_LONG).show();
                                 }else {
                                     Toast.makeText(this, task.getException().getMessage(), Toast.LENGTH_LONG).show();
                                 }
@@ -437,6 +465,7 @@ public class ProfileActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             updateDisplayName();
                         }else {
+                            loading.dismiss();
                             if (task.getException() != null) {
                                 if (task.getException() instanceof FirebaseAuthRecentLoginRequiredException) {
                                     // Re-authenticate user to update email
@@ -484,24 +513,77 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void showPromptVerificationCode() {
         AlertDialog.Builder dialog = new AlertDialog.Builder(this, R.style.ManongDialogTheme);
-        dialog.setTitle("Phone Number Validation");
-        dialog.setMessage("Enter the verification code that sent to your device.");
+        dialog.setTitle("Phone number validation");
+        dialog.setMessage("Enter the 6-digit code we sent to +63" + phoneEditText.getText());
         dialog.setCancelable(false);
-        dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
+        dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> {
+            dialogInterface.dismiss();
+            loading.dismiss();
+            enableEditText();
+            updateButton.setEnabled(true);
+            updateButton.setText("SAVE");
+        });
         View view = getLayoutInflater().inflate(R.layout.layout_validation_code, null);
         PinEntryEditText editVerificationCode = view.findViewById(R.id.text_verification_code);
+        MaterialButton phoneButton = view.findViewById(R.id.phone_button);
+        MaterialButton resendButton = view.findViewById(R.id.resend_button);
+        LinearLayout linearLayout = view.findViewById(R.id.linearLayout);
+        ProgressBar progressBar = view.findViewById(R.id.progress_bar);
         dialog.setView(view);
-        editVerificationCode.setOnPinEnteredListener(str -> verifyPhoneNumberWithCode(str.toString()));
+
+        new Handler().postDelayed(() -> {
+            if (resendButton != null) {
+                resendButton.setEnabled(true);
+                resendButton.setTextColor(getResources().getColor(R.color.textColorPrimary));
+                resendButton.setText("RESEND CODE");
+            }
+        }, 20000);
+
+        new CountDownTimer(20000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                if (resendButton != null) {
+                    resendButton.setText("RESEND CODE IN " + millisUntilFinished / 1000);
+                }
+            }
+
+            public void onFinish() {
+                if (resendButton != null) {
+                    resendButton.setEnabled(true);
+                    resendButton.setTextColor(getResources().getColor(R.color.textColorPrimary));
+                    resendButton.setText("RESEND CODE");
+                }
+            }
+        }.start();
+        editVerificationCode.setOnPinEnteredListener(str -> phoneButton.setEnabled(true));
+        editVerificationCode.setOnKeyListener((view1, i, keyEvent) -> {
+            if (editVerificationCode.getText().length() < 6) {
+                phoneButton.setEnabled(false);
+            }
+            return false;
+        });
+
         AlertDialog outDialog = dialog.create();
+
+        phoneButton.setOnClickListener(view1 -> {
+            linearLayout.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+            verifyPhoneNumberWithCode(editVerificationCode.getText().toString(), editVerificationCode, phoneButton, linearLayout, progressBar, outDialog);
+        });
+        resendButton.setOnClickListener(view1 -> {
+            outDialog.dismiss();
+            resendVerificationCode("+63" + phoneEditText.getText().toString(), mResendToken);
+            loading.show();
+        });
+
         outDialog.show();
-        outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+        outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorControlActivated));
         outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTypeface(Typeface.DEFAULT_BOLD);
     }
 
-    private void verifyPhoneNumberWithCode(String code) {
-        PhoneAuthCredential credential = PhoneAuthProvider.getCredential(mVerificationId, code);
-        updatePhoneCredential = credential;
-        updatePhoneNumber();
+    private void verifyPhoneNumberWithCode(String code, PinEntryEditText codeInput, MaterialButton phoneButton,
+                                           LinearLayout linearLayout, ProgressBar progressBar, AlertDialog outDialog) {
+        updatePhoneCredential = PhoneAuthProvider.getCredential(mVerificationId, code);
+        updatePhoneNumber(codeInput, phoneButton, linearLayout, progressBar, outDialog);
     }
 
     private void resendVerificationCode(String phoneNumber, PhoneAuthProvider.ForceResendingToken mResendToken) {
@@ -530,6 +612,7 @@ public class ProfileActivity extends AppCompatActivity {
             photoURL = String.valueOf(user.getPhotoUrl());
         }
         MoreFragment.isUpdated = true;
+        loading.dismiss();
     }
 
     @Override
@@ -614,6 +697,8 @@ public class ProfileActivity extends AppCompatActivity {
         outputDialog.show();
 
         outputDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(view1 -> {
+            ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage(getString(R.string.manong_please_wait));
             if (isEmpty(oldEditText.getText())) {
                 oldTextInput.setError("Old password must not be empty.");
                 return;
@@ -632,6 +717,24 @@ public class ProfileActivity extends AppCompatActivity {
             }else {
                 confirmTextInput.setError(null);
             }
+            if (!isPasswordInvalid(oldEditText.getText())) {
+                oldTextInput.setError(getString(R.string.manong_error_password));
+                return;
+            } else {
+                oldTextInput.setError(null);
+            }
+            if (!isPasswordInvalid(newEditText.getText())) {
+                newTextInput.setError(getString(R.string.manong_error_password));
+                return;
+            } else {
+                newTextInput.setError(null);
+            }
+            if (!isPasswordInvalid(confirmEditText.getText())) {
+                confirmTextInput.setError(getString(R.string.manong_error_password));
+                return;
+            } else {
+                confirmTextInput.setError(null);
+            }
             if (!isPasswordEqual(newEditText.getText(), confirmEditText.getText())) {
                 newTextInput.setError("Password is not the same.");
                 confirmTextInput.setError("Confirm password is not the same.");
@@ -640,6 +743,8 @@ public class ProfileActivity extends AppCompatActivity {
                 newTextInput.setError(null);
                 confirmTextInput.setError(null);
             }
+
+            progressDialog.show();
 
             // Change password
             reAuthPassword(oldEditText.getText().toString())
@@ -652,15 +757,18 @@ public class ProfileActivity extends AppCompatActivity {
                                 user.updatePassword(newEditText.getText().toString())
                                         .addOnCompleteListener(task1 -> {
                                             if (task1.isSuccessful()) {
+                                                progressDialog.dismiss();
                                                 Toast.makeText(this, "Your password changed successfully.", Toast.LENGTH_SHORT).show();
                                                 outputDialog.dismiss();
                                             }else {
+                                                progressDialog.dismiss();
                                                 if (task1.getException() != null) {
                                                     Toast.makeText(this, task1.getException().getMessage(), Toast.LENGTH_SHORT).show();
                                                 }
                                             }
                                         });
                             }else {
+                                progressDialog.dismiss();
                                 if (returnTask.getException() != null) {
                                     if (returnTask.getException() instanceof FirebaseAuthInvalidUserException) {
                                         Toast.makeText(this, "This user's account has been disabled or deleted.", Toast.LENGTH_LONG).show();
@@ -671,6 +779,7 @@ public class ProfileActivity extends AppCompatActivity {
                             }
 
                         }else {
+                            progressDialog.dismiss();
                             if (task.getException() != null) {
                                 Toast.makeText(this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                             }
@@ -746,6 +855,10 @@ public class ProfileActivity extends AppCompatActivity {
         updateButton.setEnabled(false);
     }
 
+    private boolean isPasswordInvalid(Editable text) {
+        return text != null && text.length() >= 6;
+    }
+
     @Override
     public void onBackPressed() {
 //        Intent intent = new Intent();
@@ -771,7 +884,13 @@ public class ProfileActivity extends AppCompatActivity {
                 getAuthPassword();
             }
         });
-        dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
+        dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> {
+            dialogInterface.dismiss();
+            loading.dismiss();
+            enableEditText();
+            updateButton.setEnabled(true);
+            updateButton.setText("SAVE");
+        });
         AlertDialog outDialog = dialog.create();
         outDialog.show();
         outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorPrimaryDark));

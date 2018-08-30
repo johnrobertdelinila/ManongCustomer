@@ -131,7 +131,7 @@
                     android:layout_gravity="bottom"
                     android:layout_width="wrap_content"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
-                    android:paddingBottom="40dp"
+                    android:paddingBottom="35dp"
                     android:layout_marginEnd="4dp"
                     android:layout_marginStart="9dp"
                     android:textSize="18sp"

@@ -62,7 +62,7 @@ public class ServiceFragment extends Fragment {
             Intent intent = new Intent(getContext(), item.getActivityClass());
             intent.putExtra(ServiceDetailActivity.INTENT_EXTRA_ITEM, item);
 
-            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 String sharedElementName = getString(R.string.transition_name_implementation_image);
                 Bundle options = ActivityOptionsCompat.makeSceneTransitionAnimation(activity, fromView, sharedElementName).toBundle();
                 ActivityCompat.startActivityForResult(activity, intent, REQUEST_ID_DETAIL, options);
