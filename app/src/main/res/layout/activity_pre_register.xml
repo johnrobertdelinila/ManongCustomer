@@ -10,17 +10,17 @@
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbarlayout"
-        app:elevation="0dp"
-        android:theme="@style/AppTheme.AppBarOverlay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <android.support.v7.widget.Toolbar
-            app:navigationIcon="@drawable/manong_back"
+            app:navigationIcon="@drawable/manong_back_white"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             style="@style/Widget.Manong.Toolbar.Ordinary"
             android:id="@+id/toolbar"
             app:title="@string/manong_register_title"
+            app:titleTextColor="@color/serviceGridBackgroundColor"
+            android:background="@color/toolbarBackground"
             android:paddingStart="12dp"
             android:paddingLeft="12dp"
             android:paddingEnd="12dp"

@@ -193,6 +193,8 @@ public class MessageFragment extends Fragment {
                 intent.putExtra("isSlideTransition", false);
                 intent.putExtra("providerId", customer.getProviderId());
 
+                getchatConvoStatus(intent, customer.getMessageLinkKey());
+
 //                getProviderProfile(customer.getProviderId(), intentProviderProfile, intent);
 
                 intentProviderProfile.putExtra("providerId", customer.getProviderId());
@@ -412,6 +414,24 @@ public class MessageFragment extends Fragment {
                     return result;
                 });
 
+    }
+
+    private void getchatConvoStatus(Intent intent, String messagelinkKey) {
+        MainActivity.rootRef.child("Disabled Chat Convo").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.hasChild(messagelinkKey)) {
+                    intent.putExtra("isConversationOff", "yes");
+                }else {
+                    intent.putExtra("isConversationOff", "no");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
 }

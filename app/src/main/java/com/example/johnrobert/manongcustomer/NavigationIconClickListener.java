@@ -74,6 +74,7 @@ public class NavigationIconClickListener implements View.OnClickListener {
 
         duration = 350;
 
+        backdropShown = false;
         navigationImageIcon.setImageDrawable(openIcon);
         scrim.animate().alpha(0f).setDuration(duration);
         scrim.setClickable(false);

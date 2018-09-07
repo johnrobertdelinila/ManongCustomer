@@ -1,5 +1,6 @@
 package com.example.johnrobert.manongcustomer;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
@@ -77,8 +78,8 @@ public class ProfileActivity extends AppCompatActivity {
     private static final String TAG = "ProfileActivity";
 
     private EditText editDisplayName;
-    private TextInputLayout emailTextInput, phoneTextInput;
-    private TextInputEditText emailEditText, phoneEditText;
+    private TextInputLayout emailTextInput, phoneTextInput, addressTextInput;
+    private TextInputEditText emailEditText, phoneEditText, addressEditText;
     private CircleImageView userPhotoUrl;
     private MaterialButton updateButton, changePassButton;
     private MaterialDialog loading;
@@ -118,6 +119,7 @@ public class ProfileActivity extends AppCompatActivity {
         init();
 
         editDisplayName.setBackgroundColor(Color.TRANSPARENT);
+        disableEditText();
 
         if (user != null) {
 
@@ -156,6 +158,8 @@ public class ProfileActivity extends AppCompatActivity {
             if (photoURL != null && !photoURL.trim().equals("")) {
                 if (photoURL.startsWith("https://graph.facebook.com")) {
                     photoURL = photoURL.concat("?height=100");
+                }else if (photoURL.startsWith("https://pbs.twimg.com")) {
+                    photoURL = photoURL.replace("_normal", "").trim();
                 }
                 Log.e("USER PHOTO", photoURL);
             }
@@ -249,18 +253,31 @@ public class ProfileActivity extends AppCompatActivity {
 
         updateProfileLoading();
         checkEmailIfExist();
+        sendHomeAddressUpdate();
     }
 
     private void enableEditText() {
+        emailTextInput.setEnabled(true);
+        emailEditText.setEnabled(true);
+        phoneTextInput.setEnabled(true);
+        phoneEditText.setEnabled(true);
+        editDisplayName.setEnabled(true);
+        addressEditText.setEnabled(true);
+        addressTextInput.setEnabled(true);
+
         emailTextInput.setFocusableInTouchMode(true);
         emailEditText.setFocusableInTouchMode(true);
         phoneTextInput.setFocusableInTouchMode(true);
         phoneEditText.setFocusableInTouchMode(true);
+        addressTextInput.setFocusableInTouchMode(true);
+        addressEditText.setFocusableInTouchMode(true);
         editDisplayName.setFocusableInTouchMode(true);
         emailTextInput.setFocusable(true);
         emailEditText.setFocusable(true);
         phoneTextInput.setFocusable(true);
         phoneEditText.setFocusable(true);
+        addressTextInput.setFocusable(true);
+        addressEditText.setFocusable(true);
         editDisplayName.setFocusable(true);
         editDisplayName.requestFocus();
         editDisplayName.setSelection(editDisplayName.getText().length());
@@ -271,7 +288,16 @@ public class ProfileActivity extends AppCompatActivity {
         emailEditText.setFocusable(false);
         phoneTextInput.setFocusable(false);
         phoneEditText.setFocusable(false);
+        addressEditText.setFocusable(false);
         editDisplayName.setFocusable(false);
+
+        emailTextInput.setEnabled(false);
+        emailEditText.setEnabled(false);
+        phoneTextInput.setEnabled(false);
+        phoneEditText.setEnabled(false);
+        editDisplayName.setEnabled(false);
+        addressTextInput.setEnabled(false);
+        addressEditText.setEnabled(false);
     }
 
     private void init() {
@@ -280,6 +306,8 @@ public class ProfileActivity extends AppCompatActivity {
         emailEditText = findViewById(R.id.email_edit_text);
         phoneTextInput = findViewById(R.id.phone_text_input);
         phoneEditText = findViewById(R.id.phone_edit_text);
+        addressTextInput = findViewById(R.id.address_text_input);
+        addressEditText = findViewById(R.id.address_edit_text);
         userPhotoUrl = findViewById(R.id.profile_user_image);
         updateButton = findViewById(R.id.update_button);
         changePassButton = findViewById(R.id.change_pass_button);
@@ -353,6 +381,9 @@ public class ProfileActivity extends AppCompatActivity {
         }
         if (photoURL != null && !photoURL.trim().equals("") && !photoURL.equals("null")) {
             Glide.with(getApplicationContext()).load(photoURL).into(userPhotoUrl);
+        }
+        if (ManongActivity.homeAddress != null) {
+            addressEditText.setText(ManongActivity.homeAddress);
         }
 
         userPhotoUrl.setVisibility(CircleImageView.VISIBLE);
@@ -619,15 +650,12 @@ public class ProfileActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_IMAGE) {
-            if (resultCode == RESULT_OK) {
-                if (data != null) {
-                    final Uri uri = data.getData();
-
-                    if (uri != null) {
-                        // Ask user
-                        showChangeImageConfimation(uri);
-                    }
+        if (requestCode == REQUEST_IMAGE && resultCode == Activity.RESULT_OK) {
+            if (data != null) {
+                Uri uri = data.getData();
+                if (uri != null) {
+                    // Ask user
+                    showChangeImageConfimation(uri);
                 }
             }
         }else if (requestCode == RC_RE_AUTH_GOOGLE) {
@@ -1018,6 +1046,13 @@ public class ProfileActivity extends AppCompatActivity {
                         findViewById(R.id.temp_image_view).setVisibility(CardView.GONE);
                     }
                 });
+    }
+
+    private void sendHomeAddressUpdate() {
+        Editable editAddress = addressEditText.getText();
+        if (editAddress != null && !editAddress.toString().equals(ManongActivity.homeAddress)) {
+            MainActivity.customerRef.child(user.getUid()).child("address").setValue(editAddress.toString());
+        }
     }
 
 }

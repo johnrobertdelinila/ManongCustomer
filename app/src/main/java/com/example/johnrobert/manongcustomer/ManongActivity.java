@@ -40,18 +40,32 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
     private int isUserDisabled = 0;
     private String currentFragment = "services";
     public static Boolean jobs, messages, quotation;
+    public static String homeAddress;
 
     public static FirebaseUser mUser = MainActivity.mAuth.getCurrentUser();
 
     public static DatabaseReference providerRef = MainActivity.rootRef.child("Providers");
     public static DatabaseReference requestRef = MainActivity.rootRef.child("Request");
+    private ValueEventListener settingsListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            Log.e("SETTINGS", "CHANGED!");
+            quotation = dataSnapshot.child(getString(R.string.manong_quotations)).getValue(Boolean.class);
+            messages = dataSnapshot.child(getString(R.string.manong_messages)).getValue(Boolean.class);
+            jobs = dataSnapshot.child(getString(R.string.manong_jobs)).getValue(Boolean.class);
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+    };
 
     public static FirebaseFunctions mFunctions = FirebaseFunctions.getInstance();
 
     private View scrim;
     private Toolbar toolbar;
     private NavigationIconClickListener customNavigation;
-    private FloatingActionButton fabLogin;
     private ImageView toolbarNavigationIcon;
     private Drawable closeIcon, openIcon;
     private LinearLayout backdropContainer;
@@ -68,24 +82,11 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
             return;
         }
 
-        sendRegistrationToken();
-
-        MainActivity.customerRef.child(mUser.getUid()).child("settings").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                quotation = dataSnapshot.child(getString(R.string.manong_quotations)).getValue(Boolean.class);
-                messages = dataSnapshot.child(getString(R.string.manong_messages)).getValue(Boolean.class);
-                jobs = dataSnapshot.child(getString(R.string.manong_jobs)).getValue(Boolean.class);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
+        if (quotation != null || messages != null || jobs != null) {
+            quotation = null; messages = null; jobs = null;
+        }
 
         scrim = findViewById(R.id.scrim);
-        fabLogin = findViewById(R.id.fab_login);
         closeIcon = getResources().getDrawable(R.drawable.manong_close_menu);
         openIcon = getResources().getDrawable(R.drawable.manong_logo_nav);
 
@@ -118,21 +119,6 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
 
             isDoneFromService = false;
         }
-
-//        fabLogin.setOnClickListener(view -> {
-//            Intent intent = new Intent(this, LoginActivity.class);
-//            int color = ContextCompat.getColor(this, R.color.colorAccent);
-//            if (AndroidVersionUtil.isGreaterThanL()) {
-//                FabTransform.addExtras(intent, color, R.drawable.ic_person_black_24dp);
-//            }
-//            ActivityOptionsCompat optionsCompat = ActivityOptionsCompat
-//                    .makeSceneTransitionAnimation(this,
-//                            view,
-//                            getString(R.string.transition_name_login));
-//            ActivityCompat.startActivity(this,
-//                    intent,
-//                    optionsCompat.toBundle());
-//        });
         // FIXME: PUTANG INA HINDI MAPALITAN UNG SHAPE
 
         scrim.setAlpha(0);
@@ -195,9 +181,6 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
             Intent intent = new Intent(this, MainActivity.class);
             finish();
             startActivity(intent);
-            showFabLogin();
-        }else {
-            hideFabLogin();
         }
     }
 
@@ -241,38 +224,6 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
         // Initialize the menu
         getMenuInflater().inflate(R.menu.manong_toolbar_menu, menu);
 
-        // Initialize Menu search
-//        searchMenu = menu.findItem(R.id.search);
-
-//        SearchView searchView = (SearchView) searchMenu.getActionView();
-//
-//        SearchManager searchManager = null;
-//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-//            searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-//        }
-//
-//        if (searchManager != null && searchView != null) {
-//            searchView.setSearchableInfo(searchManager
-//                    .getSearchableInfo(getComponentName()));
-//            searchView.setIconifiedByDefault(false);
-//        }
-//
-//        if (searchView != null) {
-//            searchView.setQueryHint("Search");
-//            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-//                @Override
-//                public boolean onQueryTextSubmit(String s) {
-//                    Toast.makeText(ManongActivity.this, "Hello", Toast.LENGTH_SHORT).show();
-//                    return true;
-//                }
-//
-//                @Override
-//                public boolean onQueryTextChange(String s) {
-//                    return true;
-//                }
-//            });
-//        }
-
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -282,11 +233,6 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
             case R.id.filter:
 
                 if (!currentFragment.equalsIgnoreCase(more)) {
-//                    navigateTo(new MoreFragment(), false);
-//                    currentFragment = more;
-//                    toolbar.setTitle(more);
-//                    setNewMarker(allButtons, backdropContainer, findViewById(R.id.nav_more_button));
-//                    searchMenu.setVisible(false);
 
                     customNavigation.onClickMore(toolbarNavigationIcon);
                     setNewMarker(allButtons, backdropContainer, findViewById(R.id.nav_more_button));
@@ -299,20 +245,6 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    private void showFabLogin() {
-        toolbarNavigationIcon.setImageDrawable(closeIcon);
-        new Handler().postDelayed(() -> {
-            fabLogin.animate().scaleX(1).scaleY(1).setDuration(300).start();
-            toolbar.getChildAt(1).setClickable(false);
-        }, 1200);
-    }
-
-    private void hideFabLogin() {
-        toolbarNavigationIcon.setImageDrawable(openIcon);
-        fabLogin.animate().scaleX(0).scaleY(0).setDuration(350).start();
-        toolbar.getChildAt(1).setClickable(true);
     }
 
     @Override
@@ -330,6 +262,7 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
     @Override
     protected void onResume() {
         super.onResume();
+        MainActivity.customerRef.child(mUser.getUid()).child("settings").addListenerForSingleValueEvent(settingsListener);
         isUserAuthenticated();
     }
 
@@ -337,9 +270,29 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
     protected void onStart() {
         super.onStart();
         if (mUser != null) {
+            // Send the registration key for push notification
             sendRegistrationToken();
+            // Fetch the settings details for push notification
+            MainActivity.customerRef.child(mUser.getUid()).child("settings").addValueEventListener(settingsListener);
         }
+        fetchHomeAddress();
         isUserAuthenticated();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (settingsListener != null && mUser != null) {
+            // Stops listening to the changes of the Settings node
+            MainActivity.customerRef.child(mUser.getUid()).child("settings").removeEventListener(settingsListener);
+        }
+        homeAddress = null;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        homeAddress = null;
     }
 
     private boolean isUserAuthenticated() {
@@ -373,6 +326,24 @@ public class ManongActivity extends AppCompatActivity implements NavigationHost 
                         Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void fetchHomeAddress() {
+        if (mUser != null) {
+            MainActivity.customerRef.child(mUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.hasChild("address")) {
+                        homeAddress = dataSnapshot.child("address").getValue(String.class);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
     }
 
     //    @Override

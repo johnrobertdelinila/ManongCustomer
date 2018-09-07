@@ -253,17 +253,19 @@ public class RequestFragment extends Fragment {
                         holder.quotes.setText(builder);
                         holder.quotes.setTypeface(Typeface.DEFAULT_BOLD);
                         holder.quotes.setTextColor(getResources().getColor(R.color.colorControlActivated));
+                        holder.compare_cancelled.setText("Compare");
                     }else {
                         holder.quotes.setText("Your Quotes Are On The Way");
                         holder.quotes.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
                         holder.quotes.setTextColor(getResources().getColor(R.color.textColorPrimary));
+                        holder.compare_cancelled.setText("Pending");
                     }
 
                     // Booked Service
                     if (request.getBooked() != null) {
                         holder.booked.setVisibility(TextView.VISIBLE);
                         holder.quotes.setVisibility(TextView.GONE);
-
+                        holder.compare_cancelled.setText("Booked");
                         holder.booked.setText("You've Booked a Service Provider");
                     }else {
                         holder.booked.setVisibility(TextView.GONE);
@@ -282,13 +284,12 @@ public class RequestFragment extends Fragment {
                         holder.booked.setVisibility(TextView.GONE);
                         holder.quotes.setVisibility(TextView.VISIBLE);
 
-                        holder.compare_cancelled.setText("Compare");
                         holder.container_text.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
 
                         if (request.getBooked() != null) {
                             holder.booked.setVisibility(TextView.VISIBLE);
                             holder.quotes.setVisibility(TextView.GONE);
-
+                            holder.compare_cancelled.setText("Booked");
                             holder.booked.setText("You've Booked a Service Provider");
                         }
                     }
@@ -399,9 +400,6 @@ public class RequestFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        if (recyclerView != null) {
-            recyclerView.setLayoutFrozen(false);
-        }
         if (firebaseAdapter != null) {
             firebaseAdapter.startListening();
         }
@@ -410,11 +408,11 @@ public class RequestFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (firebaseAdapter != null) {
-            firebaseAdapter.startListening();
-        }
         if (recyclerView != null) {
             recyclerView.setLayoutFrozen(false);
+        }
+        if (firebaseAdapter != null) {
+            firebaseAdapter.startListening();
         }
     }
 }

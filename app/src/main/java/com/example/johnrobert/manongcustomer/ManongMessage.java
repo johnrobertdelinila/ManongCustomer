@@ -28,10 +28,12 @@ public class ManongMessage {
     private String receiverUid;
     private String type;
     private Map<String, String> quoteMessage;
+    private Boolean isTurnedOff;
 
     public ManongMessage() { }
 
-    public ManongMessage(String text, String name, String photoUrl, String imageUrl, String uid, Object timestamp, String receiverUid, String type) {
+    public ManongMessage(String text, String name, String photoUrl, String imageUrl, String uid, Object timestamp,
+                         String receiverUid, String type) {
         this.text = text;
         this.name = name;
         this.photoUrl = photoUrl;
@@ -40,6 +42,14 @@ public class ManongMessage {
         this.timestamp = timestamp;
         this.receiverUid = receiverUid;
         this.type = type;
+    }
+
+    public Boolean getTurnedOff() {
+        return isTurnedOff;
+    }
+
+    public void setTurnedOff(Boolean turnedOff) {
+        isTurnedOff = turnedOff;
     }
 
     public Map<String, String> getQuoteMessage() {

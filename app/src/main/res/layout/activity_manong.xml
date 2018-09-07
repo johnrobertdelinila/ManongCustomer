@@ -65,22 +65,6 @@
 
     </RelativeLayout>
 
-    <android.support.design.widget.FloatingActionButton
-        android:visibility="gone"
-        android:id="@+id/fab_login"
-        style="@style/Widget.MaterialComponents.FloatingActionButton"
-        android:scaleX="0"
-        android:scaleY="0"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:tint="@color/textColorPrimary"
-        android:layout_margin="@dimen/fab_margin"
-        app:backgroundTint="?android:attr/colorAccent"
-        app:elevation="10dp"
-        app:srcCompat="@drawable/ic_person_black_24dp"
-        tools:targetApi="lollipop" />
-
     <!--<com.github.florent37.shapeofview.shapes.CutCornerView-->
         <!--android:id="@+id/fab_login"-->
         <!--android:scaleY="0"-->

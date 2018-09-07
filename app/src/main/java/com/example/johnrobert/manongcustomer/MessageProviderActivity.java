@@ -15,24 +15,32 @@
  */
 package com.example.johnrobert.manongcustomer;
 
+import android.Manifest;
 import android.app.ActivityOptions;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.button.MaterialButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.transition.Slide;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -82,9 +90,10 @@ public class MessageProviderActivity extends AppCompatActivity {
         TextView messageTextView;
         ImageView messageImageView;
         TextView messengerTextView;
-        LinearLayout containerMessageInro;
+        LinearLayout containerMessageInro, messageContainer;
         CircleImageView messengerImageView;
         TextView messagePrice, messageDate;
+        TextView textTurnOff;
 
         public MessageViewHolder(View itemView) {
             super(itemView);
@@ -95,6 +104,8 @@ public class MessageProviderActivity extends AppCompatActivity {
             containerMessageInro = itemView.findViewById(R.id.container_message_intro);
             messagePrice = itemView.findViewById(R.id.text_price);
             messageDate = itemView.findViewById(R.id.text_date);
+            messageContainer = itemView.findViewById(R.id.message_container);
+            textTurnOff = itemView.findViewById(R.id.text_turn_off);
         }
     }
 
@@ -115,14 +126,16 @@ public class MessageProviderActivity extends AppCompatActivity {
     public ImageView mAddMessageImageView;
     private AdView mAdView;
     private TextView textFirstMessage;
+    private Toolbar toolbar;
 
     private FirebaseFunctions mFunctions = FirebaseFunctions.getInstance();
 
-    private String messagelinkKey, receiverId;
+    private String messagelinkKey, receiverId, isConversationOff;
     private FirebaseAuth mFirebaseAuth = FirebaseAuth.getInstance();
     private FirebaseUser mFirebaseUser = mFirebaseAuth.getCurrentUser();
     private DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
     private DatabaseReference messagesRef = rootRef.child("Messages");
+    private DatabaseReference disabledChatRef = rootRef.child("Disabled Chat Convo");
     private boolean doneSettingUp;
 
     private String providerId;
@@ -144,8 +157,32 @@ public class MessageProviderActivity extends AppCompatActivity {
             setContentView(R.layout.activity_message_provider);
         }
 
+        mMessageEditText = findViewById(R.id.messageEditText);
+        mAddMessageImageView = findViewById(R.id.addMessageImageView);
+
+        isConversationOff = getIntent().getStringExtra("isConversationOff");
+        if (isConversationOff != null && isConversationOff.equals("yes")) {
+            updateButtonUi(true);
+        }else {
+            disabledChatRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.hasChild(messagelinkKey)) {
+                        updateButtonUi(true);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
+
         // Initialize and request AdMob ad.
         setUpAdMob();
+
+        setUpToolbar();
 
         textFirstMessage = findViewById(R.id.text_first_message);
 
@@ -162,6 +199,10 @@ public class MessageProviderActivity extends AppCompatActivity {
         intentProviderProfile.putExtra("providerDisplayName", providerName);
         intentProviderProfile.putExtra("providerPhotoUrl", providerPhoto);
         intentProviderProfile.putExtra("providerPhoneNumber", providerPhoneNumber);
+
+        if (providerName != null) {
+            toolbar.setTitle(providerName);
+        }
 
         receiverId = messagelinkKey.replaceAll(mFirebaseUser.getUid(), "").trim();
 
@@ -278,7 +319,6 @@ public class MessageProviderActivity extends AppCompatActivity {
             }
         });
 
-        mMessageEditText = findViewById(R.id.messageEditText);
         mMessageEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -298,7 +338,6 @@ public class MessageProviderActivity extends AppCompatActivity {
             }
         });
 
-        mAddMessageImageView = findViewById(R.id.addMessageImageView);
         mAddMessageImageView.setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -313,6 +352,7 @@ public class MessageProviderActivity extends AppCompatActivity {
             messagesRef.child(messagelinkKey).push().setValue(manongMessage);
             mMessageEditText.setText("");
         });
+
     }
 
     private void updateUserDisplayName(String name, String photo, String uid) {
@@ -476,71 +516,88 @@ public class MessageProviderActivity extends AppCompatActivity {
             @Override
             protected void onBindViewHolder(@NonNull MessageViewHolder holder, int position, @NonNull ManongMessage message) {
 
-                if (message.getUid().equals(providerId)) {
-                    holder.messengerImageView.setOnClickListener(view -> {
-                        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
-                            startActivity(intentProviderProfile);
-                        } else {
-                            final ActivityOptions options = ActivityOptions
-                                    .makeSceneTransitionAnimation(MessageProviderActivity.this, view, "iyot_buto_uki");
-                            startActivity(intentProviderProfile, options.toBundle());
-                        }
-                    });
+                if (message.getTurnedOff() != null) {
+                    // Message have been turned off.
+                    holder.textTurnOff.setVisibility(View.VISIBLE);
+                    holder.messageContainer.setVisibility(View.GONE);
+                    if (message.getTurnedOff()) {
+                        holder.textTurnOff.setText(message.getText());
+                    }else {
+                        holder.textTurnOff.setText(message.getText());
+                    }
                 }else {
-                    holder.messengerImageView.setClickable(false);
-                }
+                    holder.textTurnOff.setVisibility(View.GONE);
+                    holder.messageContainer.setVisibility(View.VISIBLE);
 
-                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-                if (message.getText() != null) {
-                    holder.messageTextView.setText(message.getText());
-                    holder.messageTextView.setVisibility(TextView.VISIBLE);
-                    holder.messageImageView.setVisibility(ImageView.GONE);
-                } else if (message.getImageUrl() != null) {
-                    String imageUrl = message.getImageUrl();
-                    if (imageUrl.startsWith("gs://")) {
-                        StorageReference storageReference = FirebaseStorage.getInstance()
-                                .getReferenceFromUrl(imageUrl);
-                        storageReference.getDownloadUrl().addOnCompleteListener(
-                                task -> {
-                                    if (task.isSuccessful()) {
-                                        String downloadUrl = task.getResult().toString();
-                                        Glide.with(getApplicationContext())
-                                                .load(downloadUrl)
-                                                .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
-                                                .into(holder.messageImageView);
-                                    } else {
-                                        Log.w(TAG, "Getting download url was not successful.",
-                                                task.getException());
-                                    }
-                                });
+                    if (message.getUid().equals(providerId)) {
+                        holder.messengerImageView.setOnClickListener(view -> {
+                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                                startActivity(intentProviderProfile);
+                            } else {
+                                final ActivityOptions options = ActivityOptions
+                                        .makeSceneTransitionAnimation(MessageProviderActivity.this, view, "iyot_buto_uki");
+                                startActivity(intentProviderProfile, options.toBundle());
+                            }
+                        });
+                    }else {
+                        holder.messengerImageView.setClickable(false);
+                    }
+
+
+                    if (message.getText() != null) {
+                        holder.messageTextView.setText(message.getText());
+                        holder.messageTextView.setVisibility(TextView.VISIBLE);
+                        holder.messageImageView.setVisibility(ImageView.GONE);
+                    } else if (message.getImageUrl() != null) {
+                        String imageUrl = message.getImageUrl();
+                        if (imageUrl.startsWith("gs://")) {
+                            StorageReference storageReference = FirebaseStorage.getInstance()
+                                    .getReferenceFromUrl(imageUrl);
+                            storageReference.getDownloadUrl().addOnCompleteListener(
+                                    task -> {
+                                        if (task.isSuccessful()) {
+                                            String downloadUrl = task.getResult().toString();
+                                            Glide.with(getApplicationContext())
+                                                    .load(downloadUrl)
+                                                    .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
+                                                    .into(holder.messageImageView);
+                                        } else {
+                                            Log.w(TAG, "Getting download url was not successful.",
+                                                    task.getException());
+                                        }
+                                    });
+                        } else {
+                            Glide.with(getApplicationContext())
+                                    .load(message.getImageUrl())
+                                    .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
+                                    .into(holder.messageImageView);
+                        }
+                        holder.messageImageView.setVisibility(ImageView.VISIBLE);
+                        holder.messageTextView.setVisibility(TextView.GONE);
+                    }
+
+                    holder.messengerTextView.setText(message.getName());
+                    if (message.getPhotoUrl() == null) {
+                        holder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(MessageProviderActivity.this,
+                                R.mipmap.ic_account_circle_black_36dp));
                     } else {
                         Glide.with(getApplicationContext())
-                                .load(message.getImageUrl())
+                                .load(message.getPhotoUrl())
                                 .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
-                                .into(holder.messageImageView);
+                                .into(holder.messengerImageView);
                     }
-                    holder.messageImageView.setVisibility(ImageView.VISIBLE);
-                    holder.messageTextView.setVisibility(TextView.GONE);
-                }
 
-                holder.messengerTextView.setText(message.getName());
-                if (message.getPhotoUrl() == null) {
-                    holder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(MessageProviderActivity.this,
-                            R.mipmap.ic_account_circle_black_36dp));
-                } else {
-                    Glide.with(getApplicationContext())
-                            .load(message.getPhotoUrl())
-                            .apply(new RequestOptions().dontTransform().diskCacheStrategy(DiskCacheStrategy.RESOURCE).skipMemoryCache(true))
-                            .into(holder.messengerImageView);
-                }
+                    if (message.getQuoteMessage() != null) {
+                        holder.containerMessageInro.setVisibility(View.VISIBLE);
+                        holder.messagePrice.setText("₱ " + convertNumber(Integer.parseInt(message.getQuoteMessage().get("min_price"))) + " - "
+                                + convertNumber(Integer.parseInt(message.getQuoteMessage().get("max_price"))));
+                        holder.messageDate.setText(message.getQuoteMessage().get("date"));
+                    }else {
+                        holder.containerMessageInro.setVisibility(View.GONE);
+                    }
 
-                if (message.getQuoteMessage() != null) {
-                    holder.containerMessageInro.setVisibility(View.VISIBLE);
-                    holder.messagePrice.setText("₱ " + convertNumber(Integer.parseInt(message.getQuoteMessage().get("min_price"))) + " - "
-                            + convertNumber(Integer.parseInt(message.getQuoteMessage().get("max_price"))));
-                    holder.messageDate.setText(message.getQuoteMessage().get("date"));
-                }else {
-                    holder.containerMessageInro.setVisibility(View.GONE);
+                    mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+
                 }
 
             }
@@ -619,17 +676,6 @@ public class MessageProviderActivity extends AppCompatActivity {
         }
     }
 
-//    @Override
-//    protected void onStop() {
-//        if (mAdView != null) {
-//            mAdView.pause();
-//        }
-//        if (mFirebaseAdapter != null) {
-//            mFirebaseAdapter.stopListening();
-//        }
-//        super.onStop();
-//    }
-
     @Override
     public void onDestroy() {
         if (mAdView != null) {
@@ -640,21 +686,6 @@ public class MessageProviderActivity extends AppCompatActivity {
         }
         super.onDestroy();
     }
-
-//    private void getProviderProfile2(String providerId, Intent intent) {
-//        providerRef.child(providerId).child("my_profile").addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                ProviderProfile providerProfile = dataSnapshot.getValue(ProviderProfile.class);
-//                intent.putExtra("providerProfile", providerProfile);
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//            }
-//        });
-//    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -740,6 +771,214 @@ public class MessageProviderActivity extends AppCompatActivity {
     private String convertNumber(Integer number) {
         DecimalFormat formatter = new DecimalFormat("#,###,###");
         return formatter.format(number);
+    }
+
+    private void setUpToolbar() {
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setNavigationOnClickListener(view -> onBackPressed());
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.manong_message_menu, menu);
+        MenuItem item = menu.findItem(R.id.message);
+        if (isConversationOff != null && isConversationOff.equals("yes")) {
+            updateMenuUi(true, item);
+        }else {
+            disabledChatRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.hasChild(messagelinkKey)) {
+                        updateMenuUi(true, item);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.message:
+                String title = (String) item.getTitle();
+                showAlertDialog(title, item);
+                return true;
+            case R.id.call:
+                // call provider
+                if (providerPhoneNumber != null) {
+                    // make a phone call
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(MessageProviderActivity.this, new String[]{
+                                Manifest.permission.CALL_PHONE
+                        }, ProviderProfileActivity.PERMISSION_REQUEST_CODE);
+                    }
+
+                    makePhoneCall();
+
+                }else {
+                    Toast.makeText(this, "Service Provider doesn't have Phone Number.", Toast.LENGTH_LONG).show();
+                }
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void makePhoneCall() {
+        if (providerPhoneNumber != null) {
+            Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + providerPhoneNumber));
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                Toast.makeText(this, "Please allow the permission in settings to make a phone call.", Toast.LENGTH_LONG).show();
+                return;
+            }
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this, R.style.ManongDialogTheme);
+            dialog.setMessage("Call " + providerPhoneNumber + "?");
+            dialog.setPositiveButton("CALL", (dialogInterface, i) -> startActivity(intent));
+            dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
+            AlertDialog outDialog = dialog.create();
+            outDialog.show();
+            outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+            outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTypeface(Typeface.DEFAULT_BOLD);
+            outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+            outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTypeface(Typeface.DEFAULT_BOLD);
+        }else {
+            Toast.makeText(this, "Service Provider doesn't have Phone Number.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == ProviderProfileActivity.PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                makePhoneCall();
+            }else {
+                Toast.makeText(this, "You can allow the call permission anytime request in the settings.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private void showAlertDialog(String title, MenuItem item) {
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this, R.style.ManongDialogTheme);
+        dialog.setTitle(title);
+        final String[] message = {""};
+        dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
+        dialog.setPositiveButton("YES", (dialogInterface, i) -> {
+            if (title.equalsIgnoreCase("chat off")) {
+                disableChatConvo(item);
+            }else {
+                enableChatConvo(item);
+            }
+        });
+        if (title.equalsIgnoreCase("chat off")) {
+            message[0] = "Are you sure to turn off your conversation?";
+        }else {
+            message[0] = "Are you sure to turn on your conversation?";
+        }
+        dialog.setMessage(message[0]);
+        AlertDialog outDialog = dialog.create();
+        outDialog.show();
+        outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.colorControlActivated));
+        outDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTypeface(Typeface.DEFAULT_BOLD);
+        outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(R.color.colorControlActivated));
+        outDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTypeface(Typeface.DEFAULT_BOLD);
+    }
+
+    private void disableChatConvo(MenuItem item) {
+        if (mFirebaseUser != null) {
+            disabledChatRef.child(messagelinkKey).setValue(mFirebaseUser.getUid())
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            ManongMessage manongMessage = new ManongMessage("Turned off your conversation.", mFirebaseUser.getDisplayName(),
+                                    null, null, mFirebaseUser.getUid(), ServerValue.TIMESTAMP, providerId,
+                                    MainActivity.userType);
+                            manongMessage.setTurnedOff(true);
+                            messagesRef.child(messagelinkKey).push().setValue(manongMessage).addOnCompleteListener(task1 -> {
+                                if (task1.isSuccessful()) {
+                                    updateButtonUi(true);
+                                    updateMenuUi(true, item);
+                                    Toast.makeText(this, "Your conversation is now off.", Toast.LENGTH_LONG).show();
+                                }else if (task1.getException() != null) {
+                                    Toast.makeText(this, task1.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }else if (task.getException() != null) {
+                            Toast.makeText(this, task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+        }
+    }
+
+    private void enableChatConvo(MenuItem item) {
+        disabledChatRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.hasChild(messagelinkKey) && dataSnapshot.child(messagelinkKey).getValue(String.class) != null &&
+                        dataSnapshot.child(messagelinkKey).getValue(String.class).equals(mFirebaseUser.getUid())) {
+                    // This user turned off the conversation.
+                    // Now the user will turn on the conversation.
+                    dataSnapshot.getRef().child(messagelinkKey).removeValue()
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    ManongMessage manongMessage = new ManongMessage("Turned on your conversation.", mFirebaseUser.getDisplayName(),
+                                            null, null, mFirebaseUser.getUid(), ServerValue.TIMESTAMP, providerId,
+                                            MainActivity.userType);
+                                    manongMessage.setTurnedOff(false);
+                                    messagesRef.child(messagelinkKey).push().setValue(manongMessage).addOnCompleteListener(task1 -> {
+                                        if (task1.isSuccessful()) {
+                                            updateButtonUi(false);
+                                            updateMenuUi(false, item);
+                                            Toast.makeText(MessageProviderActivity.this, "Your conversation is now on.", Toast.LENGTH_LONG).show();
+                                        }else if (task1.getException() != null) {
+                                            Toast.makeText(MessageProviderActivity.this, task1.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                                }else if (task.getException() != null) {
+                                    Toast.makeText(MessageProviderActivity.this, task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                            });
+                }else {
+                    Log.e("CHAT STATUS", "This user is not the one who turn off the conversation.");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void updateButtonUi(boolean isDisabled) {
+        if (isDisabled) {
+            mMessageEditText.setEnabled(false);
+            mAddMessageImageView.setEnabled(false);
+        }else {
+            mMessageEditText.setEnabled(true);
+            mAddMessageImageView.setEnabled(true);
+        }
+    }
+
+    private void updateMenuUi(boolean isDisabled, MenuItem item) {
+        if (isDisabled) {
+            item.setIcon(getResources().getDrawable(R.drawable.manong_chat_off));
+            item.setTitle("Chat On");
+        }else {
+            item.setIcon(getResources().getDrawable(R.drawable.manong_chat_on));
+            item.setTitle("Chat Off");
+        }
     }
 
 }

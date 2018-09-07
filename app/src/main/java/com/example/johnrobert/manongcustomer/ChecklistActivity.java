@@ -3,6 +3,7 @@ package com.example.johnrobert.manongcustomer;
 import android.animation.AnimatorInflater;
 import android.animation.StateListAnimator;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -555,20 +556,20 @@ public class ChecklistActivity extends AppCompatActivity implements VerticalStep
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_IMAGE_REQUEST_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) {
-
-            Uri filePath = data.getData();
-            try {
-                Bitmap image = MediaStore.Images.Media.getBitmap(ChecklistActivity.this.getContentResolver(), filePath);
+        if (requestCode == PICK_IMAGE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            if (data != null) {
+                Uri filePath = data.getData();
+                try {
+                    Bitmap image = MediaStore.Images.Media.getBitmap(ChecklistActivity.this.getContentResolver(), filePath);
 //                selectedImages.add(image);
-                checklistAdapters.get(resultStepNumber).insertBitmap(image);
-            }catch (Exception e) {
+                    checklistAdapters.get(resultStepNumber).insertBitmap(image);
+                }catch (Exception e) {
 
-                e.printStackTrace();
-                Log.e("IMAGE ERROR", e.getMessage());
-                Toast.makeText(this, "" + e.getMessage(), Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                    Log.e("IMAGE ERROR", e.getMessage());
+                    Toast.makeText(this, "" + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
             }
-
         }
     }
 }

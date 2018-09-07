@@ -187,7 +187,7 @@ class ImplementationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         title.add("Household");
         title.add("Upholstery");
         title.add("Stain");
-        title.add("Details (optional)");
+        title.add("Details");
         title.add("Date");
 
         ArrayList<String> subTitle = new ArrayList<>();
@@ -229,7 +229,7 @@ class ImplementationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         isOptional.add(false);
         isOptional.add(false);
         isOptional.add(false);
-        isOptional.add(true);
+        isOptional.add(false);
         isOptional.add(false);
 
         ArrayList<Integer> viewTypes = new ArrayList<>();
@@ -255,7 +255,7 @@ class ImplementationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ArrayList<String> title = new ArrayList<>();
         title.add("Painting");
         title.add("Property");
-        title.add("Details (optional)");
+        title.add("Details");
         title.add("Attachments (optional)");
         title.add("Date");
 
@@ -293,7 +293,7 @@ class ImplementationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ArrayList<Boolean> isOptional = new ArrayList<>();
         isOptional.add(false);
         isOptional.add(false);
-        isOptional.add(true);
+        isOptional.add(false);
         isOptional.add(true);
         isOptional.add(false);
 
@@ -322,7 +322,7 @@ class ImplementationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         title.add("Washing Machine Dryer");
         title.add("Refrigerator");
         title.add("Aircon");
-        title.add("Details (optional)");
+        title.add("Details");
         title.add("Date");
 
         ArrayList<String> subTitle = new ArrayList<>();
@@ -359,7 +359,7 @@ class ImplementationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         isOptional.add(true);
         isOptional.add(true);
         isOptional.add(true);
-        isOptional.add(true);
+        isOptional.add(false);
         isOptional.add(false);
 
         ArrayList<Boolean> isInput = new ArrayList<>();
@@ -452,7 +452,7 @@ class ImplementationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ArrayList<String> title = new ArrayList<>();
         title.add("Wiring");
         title.add("Type");
-        title.add("Details (optional)");
+        title.add("Details");
         title.add("Date");
 
         ArrayList<String> subTitle = new ArrayList<>();
@@ -464,7 +464,7 @@ class ImplementationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ArrayList<Boolean> isOptional = new ArrayList<>();
         isOptional.add(false);
         isOptional.add(false);
-        isOptional.add(true);
+        isOptional.add(false);
         isOptional.add(false);
 
         ArrayList<Boolean> isInput = new ArrayList<>();
@@ -512,7 +512,7 @@ class ImplementationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ArrayList<String> title = new ArrayList<>();
         title.add("Problem");
         title.add("Fittings");
-        title.add("Details (optional)");
+        title.add("Details");
         title.add("Date");
         title.add("Attachments (optional)");
 
@@ -526,7 +526,7 @@ class ImplementationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ArrayList<Boolean> isOptional = new ArrayList<>();
         isOptional.add(false);
         isOptional.add(false);
-        isOptional.add(true);
+        isOptional.add(false);
         isOptional.add(false);
         isOptional.add(true);
 

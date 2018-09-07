@@ -2,22 +2,32 @@ package com.example.johnrobert.manongcustomer;
 
 import android.app.ActivityOptions;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.card.MaterialCardView;
+import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.util.Pair;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.transition.Slide;
+import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -30,6 +40,9 @@ import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.firebase.ui.database.SnapshotParser;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -46,29 +59,93 @@ import java.util.Map;
 import de.hdodenhof.circleimageview.CircleImageView;
 import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 
-public class ChildActivity extends AppCompatActivity implements ChildEventListener {
+public class ChildActivity extends AppCompatActivity {
+
+    public class RequestQuotes {
+        private String providerId, service;
+
+        public RequestQuotes() {}
+
+        public RequestQuotes(String providerId, String service) {
+            this.providerId = providerId;
+            this.service = service;
+        }
+
+        public String getProviderId() {
+            return providerId;
+        }
+
+        public void setProviderId(String providerId) {
+            this.providerId = providerId;
+        }
+
+        public String getService() {
+            return service;
+        }
+
+        public void setService(String service) {
+            this.service = service;
+        }
+    }
+
+    public class RequestQuotesViewHolder extends RecyclerView.ViewHolder{
+
+        CircleImageView profileImage;
+        TextView providerName, date, price, lump_sum;
+        CardView temp_image;
+        MaterialRatingBar rating;
+        ImageView booked;
+
+        public RequestQuotesViewHolder(@NonNull View itemView) {
+            super(itemView);
+            profileImage = itemView.findViewById(R.id.service_profile_picture);
+            providerName = itemView.findViewById(R.id.service_provider_name);
+            date = itemView.findViewById(R.id.quote_date);
+            price = itemView.findViewById(R.id.quote_price);
+            lump_sum = itemView.findViewById(R.id.text_lump_sum);
+            temp_image = itemView.findViewById(R.id.temp_image_view);
+            rating = itemView.findViewById(R.id.service_provider_ratingbar);
+            booked = itemView.findViewById(R.id.bookmark_icon);
+        }
+
+    }
 
     private FirebaseUser user = ManongActivity.mUser;
 
     private DatabaseReference quotesRef = MainActivity.rootRef.child("Quotes");
+    private DatabaseReference requestQuoteRef;
+
+    private FirebaseRecyclerAdapter firebaseAdapter;
 
     private LinearLayout rootContainer;
+    private RecyclerView recyclerView;
 
     public static final String ANONYMOUS = "Anonymous";
     private String requestDate;
     private Request request;
-    private boolean isDoneShowing = false;
+    private boolean isDoneShowing = false, isDoneSettingUp = false;
+    public static String bookedProviderId;
+    public static Boolean isRequestBooked;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setUpExitTransition();
         setContentView(R.layout.activity_child);
+        isRequestBooked = null;
 
         request = (Request) getIntent().getSerializableExtra("request");
         rootContainer = findViewById(R.id.service_provider_container);
+        recyclerView = findViewById(R.id.recycler_view);
+        bookedProviderId = null;
+        requestQuoteRef = ManongActivity.requestRef.child(request.getKey()).child("quotes");
 
-//        requestRef.child(request.getKey()).child("quotes").addChildEventListener(this);
+        if (request.getBooked() != null)
+            isRequestBooked = true;
+
+        LinearLayoutManager mLinearManager = new LinearLayoutManager(this);
+        mLinearManager.setReverseLayout(true);
+        mLinearManager.setStackFromEnd(true);
+        recyclerView.setLayoutManager(mLinearManager);
 
         setUpToolbar();
 
@@ -85,6 +162,7 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
         });
 
         cancelledListener(request);
+        quotesListener();
 
         if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
             onEnterAnimationComplete();
@@ -132,16 +210,39 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
         });
     }
 
+    private void quotesListener() {
+        requestQuoteRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (!isDoneSettingUp && request.getQuotes() == null && dataSnapshot.hasChildren()) {
+                    setUpFirebaseRecyclerView();
+                    dataSnapshot.getRef().removeEventListener(this);
+                    findViewById(R.id.second_container).setVisibility(RelativeLayout.GONE);
+                    findViewById(R.id.cancelled_container).setVisibility(RelativeLayout.GONE);
+                    rootContainer.setVisibility(View.VISIBLE);
+                    setUpFirebaseRecyclerView();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     private void generateServiceProvider(Request request) {
         if (request.getCancelled() != null && request.getCancelled()) {
             findViewById(R.id.cancelled_container).setVisibility(RelativeLayout.VISIBLE);
             findViewById(R.id.second_container).setVisibility(RelativeLayout.GONE);
-            findViewById(R.id.scroll_provider_container).setVisibility(ScrollView.GONE);
+            rootContainer.setVisibility(View.GONE);
         }else if (request.getQuotes() != null) {
-            generateServiceProviders(request.getQuotes());
+            setUpFirebaseRecyclerView();
             findViewById(R.id.second_container).setVisibility(RelativeLayout.GONE);
             findViewById(R.id.cancelled_container).setVisibility(RelativeLayout.GONE);
-            findViewById(R.id.scroll_provider_container).setVisibility(ScrollView.VISIBLE);
+            rootContainer.setVisibility(View.VISIBLE);
+        }else {
+            rootContainer.setVisibility(View.GONE);
         }
     }
 
@@ -162,184 +263,12 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
         return builder.toString();
     }
 
-    private void generateServiceProviders(HashMap<String, String> serviceProviders) {
-        int iterator = 0;
-        for (String providerId: serviceProviders.keySet()) {
-            String quoteId = serviceProviders.get(providerId);
-            LinearLayout.LayoutParams card_params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            card_params.setMargins(0, 10, 0, 10);
-            LinearLayout.LayoutParams invisible_params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            invisible_params.setMargins(0, 40 , 0 ,40);
+    private void setProviderName(TextView providerName, CircleImageView profileImage, String uid, CardView temp_image,
+                                 Intent intent, Intent intentProviderProfile) {
 
-            View cardView = getLayoutInflater().inflate(R.layout.list_card_serviceprovider, null);
-            CircleImageView profileImage = cardView.findViewById(R.id.service_profile_picture);
-            TextView providerName = cardView.findViewById(R.id.service_provider_name);
-            TextView date = cardView.findViewById(R.id.quote_date);
-            TextView price = cardView.findViewById(R.id.quote_price);
-            TextView lump_sum = cardView.findViewById(R.id.text_lump_sum);
-            CardView temp_image = cardView.findViewById(R.id.temp_image_view);
-            MaterialRatingBar rating = cardView.findViewById(R.id.service_provider_ratingbar);
-            ImageView booked = cardView.findViewById(R.id.bookmark_icon);
+        profileImage.setVisibility(CircleImageView.GONE);
+        temp_image.setVisibility(CardView.VISIBLE);
 
-            cardView.setAlpha(0);
-            long animationDelay = 700L + (iterator + 1) * 25;
-            cardView.animate()
-                    .alpha(1)
-                    .translationY(0)
-                    .setDuration(200)
-                    .setInterpolator(new LinearOutSlowInInterpolator())
-                    .setStartDelay(animationDelay)
-                    .start();
-
-            if (request.getBooked() != null && request.getBooked().get("bookedProvider").equals(providerId)) {
-                booked.setVisibility(ImageView.VISIBLE);
-            }
-
-            rating.setRating(4.5f);
-
-            Intent intentProviderProfile = new Intent(ChildActivity.this, ProviderProfileActivity.class);
-            intentProviderProfile.putExtra("providerId", providerId);
-            intentProviderProfile.putExtra("requestKey", request.getKey());
-            intentProviderProfile.putExtra("serviceKey", quoteId);
-
-            profileImage.setOnClickListener(view -> {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                    startActivity(intentProviderProfile);
-                } else {
-                    final ActivityOptions options = ActivityOptions
-                            .makeSceneTransitionAnimation(ChildActivity.this, view, "iyot_buto_uki");
-                    startActivity(intentProviderProfile, options.toBundle());
-                }
-            });
-            temp_image.setOnClickListener(view -> startActivity(intentProviderProfile));
-
-            cardView.setLayoutParams(card_params);
-            rootContainer.addView(cardView);
-
-            if (iterator == (serviceProviders.size() - 1)) {
-                View invi_view = new View(this);
-                invi_view.setVisibility(View.INVISIBLE);
-                invi_view.setLayoutParams(invisible_params);
-                rootContainer.addView(invi_view);
-            }
-
-            Intent intent = new Intent(this, MessageProviderActivity.class);
-
-            if (user != null) {
-                String messageLinkKey = user.getUid() + providerId;
-                intent.putExtra("messageLinkKey", messageLinkKey);
-                intent.putExtra("isSlideTransition", true);
-                intent.putExtra("providerId", providerId);
-                cardView.setOnClickListener(view -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(this).toBundle();
-                        this.startActivity(intent, bundle);
-                    }else {
-                        startActivity(intent);
-                    }
-                });
-            }
-
-            quotesRef.child(quoteId).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Quotes quote = dataSnapshot.getValue(Quotes.class);
-                    if (quote != null) {
-                        if (requestDate != null) {
-                            date.setText("Service Date: " + requestDate);
-                        }
-                        price.setText("₱ " + convertNumber(quote.getQuotePrice().get("minimum")) + " - " + convertNumber(quote.getQuotePrice().get("maximum")));
-                        lump_sum.setText("Lump Sum");
-                        setProviderName(providerName, profileImage, providerId, temp_image, intent, intentProviderProfile);
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                    Toast.makeText(ChildActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
-            iterator++;
-
-        }
-    }
-
-    private void generateEachProvider(String providerId, String quoteId) {
-        LinearLayout.LayoutParams card_params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        card_params.setMargins(0, 10, 0, 10);
-        LinearLayout.LayoutParams invisible_params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        invisible_params.setMargins(0, 40 , 0 ,40);
-
-        View cardView = getLayoutInflater().inflate(R.layout.list_card_serviceprovider, null);
-        CircleImageView profileImage = cardView.findViewById(R.id.service_profile_picture);
-        TextView providerName = cardView.findViewById(R.id.service_provider_name);
-        TextView date = cardView.findViewById(R.id.quote_date);
-        TextView price = cardView.findViewById(R.id.quote_price);
-        TextView lump_sum = cardView.findViewById(R.id.text_lump_sum);
-        CardView temp_image = cardView.findViewById(R.id.temp_image_view);
-        MaterialRatingBar rating = cardView.findViewById(R.id.service_provider_ratingbar);
-        ImageView booked = cardView.findViewById(R.id.bookmark_icon);
-
-
-        rating.setRating(4.5f);
-
-        Intent intentProviderProfile = new Intent(ChildActivity.this, ProviderProfileActivity.class);
-        intentProviderProfile.putExtra("providerId", providerId);
-        intentProviderProfile.putExtra("requestKey", request.getKey());
-        intentProviderProfile.putExtra("serviceKey", quoteId);
-
-        profileImage.setOnClickListener(view -> {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                startActivity(intentProviderProfile);
-            } else {
-                final ActivityOptions options = ActivityOptions
-                        .makeSceneTransitionAnimation(ChildActivity.this, view, "iyot_buto_uki");
-                startActivity(intentProviderProfile, options.toBundle());
-            }
-        });
-        temp_image.setOnClickListener(view -> startActivity(intentProviderProfile));
-
-        cardView.setLayoutParams(card_params);
-        rootContainer.addView(cardView);
-
-        Intent intent = new Intent(this, MessageProviderActivity.class);
-
-        if (user != null) {
-            String messageLinkKey = user.getUid() + providerId;
-            intent.putExtra("messageLinkKey", messageLinkKey);
-            intent.putExtra("isSlideTransition", true);
-            intent.putExtra("providerId", providerId);
-            cardView.setOnClickListener(view -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(this).toBundle();
-                    this.startActivity(intent, bundle);
-                }else {
-                    startActivity(intent);
-                }
-            });
-        }
-
-        quotesRef.child(quoteId).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Quotes quote = dataSnapshot.getValue(Quotes.class);
-                if (quote != null) {
-                    date.setText("Service Date: " + quote.getDate());
-                    price.setText("₱ " + convertNumber(quote.getQuotePrice().get("minimum")) + " - " + convertNumber(quote.getQuotePrice().get("maximum")));
-                    lump_sum.setText("Lump Sum");
-                    setProviderName(providerName, profileImage, providerId, temp_image, intent, intentProviderProfile);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(ChildActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void setProviderName(TextView providerName, CircleImageView profileImage, String uid,
-                                 CardView temp_image, Intent intent, Intent intentProviderProfile) {
         getUserRecord(uid)
                 .addOnCompleteListener(task -> {
                     if (!task.isSuccessful()) {
@@ -386,6 +315,7 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
                                 })
                                 .into(profileImage);
                     }else {
+                        profileImage.setImageDrawable(ContextCompat.getDrawable(ChildActivity.this, R.mipmap.ic_account_circle_black_36dp));
                         profileImage.setVisibility(CircleImageView.VISIBLE);
                         temp_image.setVisibility(CardView.GONE);
                     }
@@ -399,14 +329,6 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
                     intentProviderProfile.putExtra("providerPhoneNumber", phoneNumber);
 
                 });
-    }
-
-    private void setUpExitTransition() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-            Slide fade = new Slide(Gravity.START);
-            getWindow().setExitTransition(fade);
-        }
     }
 
     private String convertNumber(Integer number) {
@@ -435,37 +357,137 @@ public class ChildActivity extends AppCompatActivity implements ChildEventListen
     }
 
     @Override
-    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-        String providerId = dataSnapshot.getKey();
-        String quoteId = dataSnapshot.getValue(String.class);
-        generateEachProvider(providerId, quoteId);
-    }
-
-    @Override
-    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-    }
-
-    @Override
-    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-    }
-
-    @Override
-    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-    }
-
-    @Override
-    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-    }
-
-    @Override
     public void onBackPressed() {
-        super.onBackPressed();
         findViewById(R.id.cancelled_container).setVisibility(RelativeLayout.GONE);
         findViewById(R.id.second_container).setVisibility(RelativeLayout.GONE);
-        findViewById(R.id.scroll_provider_container).setVisibility(ScrollView.GONE);
+//        findViewById(R.id.scroll_provider_container).setVisibility(ScrollView.GONE);
+        rootContainer.setVisibility(View.GONE);
+        super.onBackPressed();
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ManongActivity.requestRef.child(request.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.hasChild("booked")) {
+                    dataSnapshot.getRef().child("booked").child("bookedProvider").addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            bookedProviderId = dataSnapshot.getValue(String.class);
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void setUpFirebaseRecyclerView() {
+
+        isDoneSettingUp = true;
+
+        SnapshotParser<RequestQuotes> quoteParser = snapshot -> {
+            RequestQuotes requestQuotes = new RequestQuotes();
+            requestQuotes.setProviderId(snapshot.getKey());
+            requestQuotes.setService(snapshot.getValue(String.class));
+            return requestQuotes;
+        };
+
+        FirebaseRecyclerOptions<RequestQuotes> options = new FirebaseRecyclerOptions.Builder<RequestQuotes>()
+                .setQuery(requestQuoteRef, quoteParser)
+                .build();
+
+        firebaseAdapter = new FirebaseRecyclerAdapter<RequestQuotes, RequestQuotesViewHolder>(options) {
+
+            @NonNull
+            @Override
+            public RequestQuotesViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+                View view = LayoutInflater.from(ChildActivity.this).inflate(R.layout.list_card_serviceprovider, viewGroup, false);
+                return new RequestQuotesViewHolder(view);
+            }
+
+            @Override
+            protected void onBindViewHolder(@NonNull RequestQuotesViewHolder holder, int position, @NonNull RequestQuotes requestQuotes) {
+                Intent intentProviderProfile = new Intent(ChildActivity.this, ProviderProfileActivity.class);
+                intentProviderProfile.putExtra("providerId", requestQuotes.getProviderId());
+                intentProviderProfile.putExtra("requestKey", request.getKey());
+                intentProviderProfile.putExtra("serviceKey", requestQuotes.getService());
+
+                Intent intent = new Intent(ChildActivity.this, MessageProviderActivity.class);
+
+                setProviderName(holder.providerName, holder.profileImage, requestQuotes.getProviderId(), holder.temp_image, intent, intentProviderProfile);
+
+                quotesRef.child(requestQuotes.getService()).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        Quotes quote = dataSnapshot.getValue(Quotes.class);
+                        if (quote != null) {
+                            if (requestDate != null) {
+                                holder.date.setText("Service Date: " + requestDate);
+                            }
+                            holder.price.setText("₱ " + convertNumber(quote.getQuotePrice().get("minimum")) + " - " + convertNumber(quote.getQuotePrice().get("maximum")));
+                            holder.lump_sum.setText("Lump Sum");
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Toast.makeText(ChildActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+                if (request.getBooked() != null && request.getBooked().get("bookedProvider").equals(requestQuotes.getProviderId())) {
+                    holder.booked.setVisibility(ImageView.VISIBLE);
+                }else {
+                    holder.booked.setVisibility(ImageView.GONE);
+                }
+
+                holder.rating.setRating(4.5f);
+
+                holder.profileImage.setOnClickListener(view -> {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                        startActivity(intentProviderProfile);
+                    } else {
+                        final ActivityOptions options = ActivityOptions
+                                .makeSceneTransitionAnimation(ChildActivity.this, view, "iyot_buto_uki");
+                        startActivity(intentProviderProfile, options.toBundle());
+                    }
+                });
+                holder.temp_image.setOnClickListener(view -> startActivity(intentProviderProfile));
+
+                if (user != null) {
+                    String messageLinkKey = user.getUid() + requestQuotes.getProviderId();
+                    intent.putExtra("messageLinkKey", messageLinkKey);
+                    intent.putExtra("isSlideTransition", true);
+                    intent.putExtra("providerId", requestQuotes.getProviderId());
+                    holder.itemView.setOnClickListener(view -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(ChildActivity.this).toBundle();
+                            startActivity(intent, bundle);
+                        }else {
+                            startActivity(intent);
+                        }
+                    });
+                }
+
+            }
+
+        };
+
+        recyclerView.setAdapter(firebaseAdapter);
+        firebaseAdapter.startListening();
+
+    }
+
 }

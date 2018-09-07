@@ -29,6 +29,8 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -66,6 +68,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
     public static final String INTENT_EXTRA_ITEM = "item";
     private static final int PERMISSION_REQUEST_CODE = 1000;
     private static final int GOOGLE_PLAY_SERVICES_REQUEST_CODE = 2000;
+    private String address;
 
     public static boolean isDone = false;
 
@@ -79,6 +82,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
     private MaterialButton btnMap;
     private MaterialAnimatedSwitch switchLocation;
     private CollapsingToolbarLayout collapsingToolbarLayout;
+    private CheckBox checkBoxAddress;
 
     // Map
     public GoogleApiClient googleApiClient;
@@ -86,6 +90,8 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
     private Location mLastLocation;
     private Marker marker;
     private String locationName = null;
+    private static final LatLng marinduque = new LatLng(13.4767, 121.9032); // Center of Philippines
+
     private int image;
 
     private final View.OnTouchListener touchListener = new View.OnTouchListener() {
@@ -126,6 +132,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
             item = getIntent().getParcelableExtra(INTENT_EXTRA_ITEM);
             collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
             cardPlace = findViewById(R.id.place_autocomplete_fragment_container);
+            checkBoxAddress = findViewById(R.id.checkbox_location);
 
             Toolbar toolbar = findViewById(R.id.toolbar);
             setSupportActionBar(toolbar);
@@ -170,6 +177,26 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
                     collapsingToolbarLayout.setExpandedTitleTextAppearance(R.style.Expanded);
                 }
             });
+
+            address = ManongActivity.homeAddress;
+            if (address != null && address.trim().length() > 0) {
+                checkBoxAddress.setVisibility(View.VISIBLE);
+                checkBoxAddress.setOnCheckedChangeListener((compoundButton, b) -> {
+                    if (b) {
+                        mapContainer.setVisibility(View.GONE);
+                        btnMap.setVisibility(View.GONE);
+                        compoundButton.setText(compoundButton.getText() + "\n\u2022 " + address);
+                        offLocation();
+                        if (switchLocation.isChecked()) {
+                            switchLocation.toggle();
+                        }
+                    }else {
+                        mapContainer.setVisibility(View.VISIBLE);
+                        btnMap.setVisibility(View.VISIBLE);
+                        compoundButton.setText(R.string.get_home_address);
+                    }
+                });
+            }
 
             setupViews();
 
@@ -259,6 +286,8 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
             }
             if (locationName != null) {
                 service.setLocationName(locationName);
+            }else if (address != null && address.trim().length() > 0) {
+                service.setLocationName(address);
             }
             bundle.putString("checklist_title", item.title + " checklist");
             bundle.putSerializable("service", service);
@@ -307,6 +336,9 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
         } catch (Resources.NotFoundException e) {
             Log.e("ServiceDetailActivity", "Can't find style. Error: ", e);
         }
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(marinduque, 4.7f));
+
 //        findViewById(R.id.container_cut_button).setVisibility(CutCornerView.VISIBLE);
 
         btnMap.setOnClickListener(new View.OnClickListener() {
@@ -395,15 +427,7 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
                 cardPlace.setVisibility(View.GONE);
                 setUpLocation();
             }else {
-                cardPlace.setVisibility(View.VISIBLE);
-                if (googleApiClient != null && googleApiClient.isConnected()) {
-                    googleApiClient.disconnect();
-                }
-                mLastLocation = null;
-                if (marker != null) {
-                    marker.remove();
-                }
-                mMap.animateCamera(CameraUpdateFactory.zoomTo(4.0f));
+                offLocation();
             }
         });
 
@@ -590,5 +614,17 @@ public class ServiceDetailActivity extends AppCompatActivity implements OnMapRea
         if (googleApiClient != null) {
             googleApiClient.disconnect();
         }
+    }
+
+    private void offLocation() {
+        cardPlace.setVisibility(View.VISIBLE);
+        if (googleApiClient != null && googleApiClient.isConnected()) {
+            googleApiClient.disconnect();
+        }
+        mLastLocation = null;
+        if (marker != null) {
+            marker.remove();
+        }
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(marinduque, 4.7f));
     }
 }

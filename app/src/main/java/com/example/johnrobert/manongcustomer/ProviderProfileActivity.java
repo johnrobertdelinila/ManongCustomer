@@ -41,6 +41,9 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.functions.FirebaseFunctionsException;
 
 import java.util.HashMap;
@@ -51,7 +54,7 @@ import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 
 public class ProviderProfileActivity extends AppCompatActivity implements AppBarLayout.OnOffsetChangedListener {
 
-    private static final int PERMISSION_REQUEST_CODE = 1996;
+    public static final int PERMISSION_REQUEST_CODE = 1996;
 
     String sakurako1 = "http://img2-ak.lst.fm/i/u/arO/3513dabe28dd41a1fbb9d4f1a6048ec7";
     String sakurako2 = "https://terminal-clipkit-cdn.s3-ap-northeast-1.amazonaws.com/articles/images/000/003/250/original/8a8dce84-75b3-43be-a56e-6397b671668b.jpg";
@@ -164,6 +167,7 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
         AboutFragment aboutFragment = new AboutFragment();
         bundle.putString("requestKey", requestKey);
         bundle.putString("serviceKey", serviceKey);
+
         aboutFragment.setArguments(bundle);
 
         ViewPager mViewPager = findViewById(R.id.viewpager);
@@ -203,7 +207,7 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 makePhoneCall();
             }else {
-                Toast.makeText(this, "You can allow the permission request in the settings.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "You can allow the call permission anytime request in the settings.", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -522,4 +526,7 @@ public class ProviderProfileActivity extends AppCompatActivity implements AppBar
         scrim.animate().alpha(0).setDuration(0);
         super.onStart();
     }
+
+
+
 }

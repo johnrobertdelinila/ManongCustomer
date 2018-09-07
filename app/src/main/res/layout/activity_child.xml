@@ -14,7 +14,6 @@
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbarlayout"
         app:elevation="6dp"
-        android:theme="@style/AppTheme.AppBarOverlay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -133,19 +132,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <LinearLayout
+            <TextView
                 android:layout_centerInParent="true"
-                android:orientation="vertical"
-                android:gravity="center_horizontal"
+                android:text="This request has already cancelled."
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:text="This request has already cancelled."
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
+                android:layout_height="wrap_content" />
 
         </RelativeLayout>
 
@@ -194,37 +185,34 @@
 
         </RelativeLayout>
 
-        <ScrollView
-            android:id="@+id/scroll_provider_container"
-            android:elevation="0dp"
-            android:layout_below="@+id/first_container"
-            android:visibility="gone"
+        <LinearLayout
+            android:id="@+id/service_provider_container"
+            android:layout_margin="16dp"
+            android:paddingStart="12dp"
+            android:paddingLeft="12dp"
+            android:paddingEnd="12dp"
+            android:paddingRight="12dp"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent" >
 
-            <LinearLayout
-                android:id="@+id/service_provider_container"
-                android:layout_margin="16dp"
-                android:paddingStart="12dp"
-                android:paddingLeft="12dp"
-                android:paddingEnd="12dp"
-                android:paddingRight="12dp"
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+            <TextView
+                android:text="Service Provider(s)"
+                android:layout_marginTop="72dp"
+                android:layout_marginBottom="@dimen/padding_normal_16dp"
+                android:textSize="16sp"
+                android:fontFamily="@font/rubik"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-                <TextView
-                    android:text="Service Provider(s)"
-                    android:layout_marginBottom="@dimen/padding_normal_16dp"
-                    android:textSize="16sp"
-                    android:fontFamily="@font/rubik"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+            <android.support.v7.widget.RecyclerView
+                android:elevation="0dp"
+                android:id="@+id/recycler_view"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent" />
 
-            </LinearLayout>
-
-        </ScrollView>
+        </LinearLayout>
 
     </com.example.johnrobert.manongcustomer.ForegroundRelativeLayout>
 

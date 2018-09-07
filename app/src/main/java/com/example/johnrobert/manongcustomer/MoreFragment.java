@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,20 +67,26 @@ public class MoreFragment extends Fragment implements CompoundButton.OnCheckedCh
         viewEditProfile = view.findViewById(R.id.user_view_edit);
         tempImage = view.findViewById(R.id.temp_image_view);
 
-        switch_quotation.setOnCheckedChangeListener(this);
-        switch_messages.setOnCheckedChangeListener(this);
-        switch_jobs.setOnCheckedChangeListener(this);
-
         activity = getActivity();
 
         getUserProfile();
 
-        if (ManongActivity.jobs != null)
+        if (ManongActivity.jobs != null){
             switch_jobs.setChecked(ManongActivity.jobs);
-        if (ManongActivity.messages != null)
+            Log.e("SETTINGS", "JOBS: " + String.valueOf(ManongActivity.jobs));
+        }
+        if (ManongActivity.messages != null) {
             switch_messages.setChecked(ManongActivity.messages);
-        if (ManongActivity.quotation != null)
+            Log.e("SETTINGS", "MESSAGES: " + String.valueOf(ManongActivity.messages));
+        }
+        if (ManongActivity.quotation != null) {
             switch_quotation.setChecked(ManongActivity.quotation);
+            Log.e("SETTINGS", "QUOTATION: " + String.valueOf(ManongActivity.quotation));
+        }
+
+        switch_quotation.setOnCheckedChangeListener(this);
+        switch_messages.setOnCheckedChangeListener(this);
+        switch_jobs.setOnCheckedChangeListener(this);
 
         view.findViewById(R.id.profile_container).setOnClickListener(profileview -> {
             Intent intent = new Intent(getActivity(), ProfileActivity.class);
@@ -144,6 +151,8 @@ public class MoreFragment extends Fragment implements CompoundButton.OnCheckedCh
                 if (photoURL != null && !photoURL.trim().equals("") && !photoURL.equals("null")) {
                     if (photoURL.startsWith("https://graph.facebook.com")) {
                         photoURL = photoURL.concat("?height=100");
+                    }else if (photoURL.startsWith("https://pbs.twimg.com")) {
+                        photoURL = photoURL.replace("_normal", "").trim();
                     }
                     Glide.with(activity.getApplicationContext())
                             .load(photoURL)

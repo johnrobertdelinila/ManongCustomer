@@ -429,7 +429,7 @@ public class RegisterActivity extends AppCompatActivity {
                         // Successfully updated the user.
                         // Go to next activity.
                         logEventSignUp(uid);
-                        Toast.makeText(this, "Welcome to One Tap Manong.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Thank you for joining. Welcome to One Tap Manong!", Toast.LENGTH_SHORT).show();
                         Intent homeIntent = new Intent(this, ManongActivity.class);
                         finish();
                         startActivity(homeIntent);

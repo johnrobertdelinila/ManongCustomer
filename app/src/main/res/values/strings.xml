@@ -98,8 +98,9 @@
     <string name="manong_quotations">New Quotations</string>
     <string name="manong_messages">New Messages</string>
     <string name="manong_jobs">New Completed Jobs</string>
-    <string name="manong_text_moment">One moment…</string>
+    <string name="manong_text_moment">Signing you in…</string>
 
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
+    <string name="get_home_address">Set location as your home address</string>
 
 </resources>

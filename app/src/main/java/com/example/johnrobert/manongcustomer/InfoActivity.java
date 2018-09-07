@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.button.MaterialButton;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.view.GravityCompat;
@@ -26,6 +28,11 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.github.florent37.shapeofview.shapes.CutCornerView;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -108,6 +115,7 @@ public class InfoActivity extends AppCompatActivity {
 
     private void cancelRequest(String cancellationReason) {
         if (request != null && request.getKey() != null) {
+
             HashMap<String, Object> cancellation = new HashMap<>();
             cancellation.put("isCancelled", true);
             if (!cancellationReason.equals("")) {
@@ -122,6 +130,25 @@ public class InfoActivity extends AppCompatActivity {
                             cancelButton.setEnabled(false);
                         }
                     });
+
+            MainActivity.customerRef.child(ManongActivity.mUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (!dataSnapshot.hasChild("cancelled")) {
+                        MainActivity.customerRef.child(ManongActivity.mUser.getUid()).child("cancelled").setValue(1);
+                    }else {
+                        int currCancelled = dataSnapshot.child("cancelled").getValue(Integer.class);
+                        if (dataSnapshot.child("cancelled").getValue(Integer.class) != null) {
+                            MainActivity.customerRef.child(ManongActivity.mUser.getUid()).child("cancelled").setValue(currCancelled + 1);
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
         }
     }
 

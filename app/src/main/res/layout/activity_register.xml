@@ -9,17 +9,17 @@
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbarlayout"
-        app:elevation="0dp"
-        android:theme="@style/AppTheme.AppBarOverlay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <android.support.v7.widget.Toolbar
-            app:navigationIcon="@drawable/manong_back"
+            app:navigationIcon="@drawable/manong_back_white"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             style="@style/Widget.Manong.Toolbar.Ordinary"
             android:id="@+id/toolbar"
+            android:background="@color/toolbarBackground"
             app:title="Account"
+            app:titleTextColor="@color/serviceGridBackgroundColor"
             android:paddingStart="12dp"
             android:paddingLeft="12dp"
             android:paddingEnd="12dp"
@@ -50,6 +50,7 @@
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
                 android:fontFamily="@font/rubik_medium"
                 android:textSize="20sp"
+                android:layout_marginTop="24dp"
                 android:textColor="@color/textColorPrimary"
                 android:text="Account information"
                 android:layout_marginBottom="28dp"
