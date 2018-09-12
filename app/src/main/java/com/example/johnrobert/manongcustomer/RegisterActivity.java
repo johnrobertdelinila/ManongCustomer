@@ -146,13 +146,13 @@ public class RegisterActivity extends AppCompatActivity {
         ProgressBar progressBar = view.findViewById(R.id.progress_bar);
         dialog.setView(view);
 
-        new Handler().postDelayed(() -> {
-            if (resendButton != null) {
-                resendButton.setEnabled(true);
-                resendButton.setTextColor(getResources().getColor(R.color.textColorPrimary));
-                resendButton.setText("RESEND CODE");
-            }
-        }, 20000);
+//        new Handler().postDelayed(() -> {
+////            if (resendButton != null) {
+////                resendButton.setEnabled(true);
+////                resendButton.setTextColor(getResources().getColor(R.color.textColorPrimary));
+////                resendButton.setText("RESEND CODE");
+////            }
+////        }, 20000);
 
         new CountDownTimer(20000, 1000) {
             public void onTick(long millisUntilFinished) {
@@ -423,7 +423,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void updateCustomerAccount(String uid) {
-        MainActivity.customerRef.child(uid).child("customer").setValue("大原櫻子")
+        MainActivity.customerRef.child(uid).child("isSignedIn").setValue(true)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         // Successfully updated the user.

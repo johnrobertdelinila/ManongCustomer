@@ -295,14 +295,7 @@ public class MainActivity extends AppCompatActivity {
                     // User is verified as a customer.
                     // Go to next activity.
                     logEventLogin(uid);
-                    if (isSocialMedia) {
-                        updateCustomerAccount(uid);
-                    }else {
-                        loading.dismiss();
-                        showProgressbar(false, loginButton);
-                        finish();
-                        startActivity(intent);
-                    }
+                    updateCustomerAccount(uid);
                 }else {
                     // Not a customer
                     if (isSocialMedia) {
@@ -380,22 +373,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateCustomerAccount(String uid) {
-        customerRef.child(uid).child("customer").setValue("大原櫻子")
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        // Successfully updated the user.
-                        // Go to next activity.
-                        loading.dismiss();
-                        showProgressbar(false, loginButton);
-                        finish();
-                        startActivity(intent);
-                    }else {
-                        // Show error.
-                        loading.dismiss();
-                        Toast.makeText(MainActivity.this, Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
-                        showProgressbar(false, loginButton);
-                    }
-                });
+        // Update customer signed in value
+        customerRef.child(uid).child("isSignedIn").setValue(true);
+        // Go to next activity.
+        loading.dismiss();
+        showProgressbar(false, loginButton);
+        finish();
+        startActivity(intent);
     }
 
     private void logEventSignUp(String uid) {

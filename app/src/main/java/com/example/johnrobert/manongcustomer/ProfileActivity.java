@@ -189,16 +189,18 @@ public class ProfileActivity extends AppCompatActivity {
             android.app.AlertDialog.Builder dialog = new android.app.AlertDialog.Builder(ProfileActivity.this);
             dialog.setTitle("Logout");
             dialog.setMessage("Are you sure, you want to logout?");
-            dialog.setPositiveButton("YES", (dialogInterface, i) ->
-                    AuthUI.getInstance()
-                    .signOut(ProfileActivity.this)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
-                            finish();
-                            startActivity(intent);
-                        }
-                    }));
+            dialog.setPositiveButton("YES", (dialogInterface, i) -> {
+                MainActivity.customerRef.child(user.getUid()).child("isSignedIn").setValue(false);
+                AuthUI.getInstance()
+                        .signOut(ProfileActivity.this)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
+                                finish();
+                                startActivity(intent);
+                            }
+                        });
+            });
             dialog.setNegativeButton("CANCEL", (dialogInterface, i) -> dialogInterface.dismiss());
 
             android.app.AlertDialog dialogg = dialog.create();
